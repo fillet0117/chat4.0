@@ -1,0 +1,64 @@
+/* 常用基本設定 */
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:#c8deec;border-radius:10px;}
+::-webkit-scrollbar-thumb:hover {background: #006eb7;}
+* {box-sizing: border-box;}
+figure {margin: 0;}
+body,a {color: #ffe1af;}
+img {max-width: 100%;height: auto;vertical-align: bottom;border: none;}
+.editor a {word-wrap: break-word;word-break: break-all;}
+:-ms-input-placeholder {opacity: 0.6;}
+input:focus::-webkit-input-placeholder {color: transparent;}
+input:focus::-moz-placeholder {color: transparent;}
+input:focus:-ms-input-placeholder {color: transparent;}
+input:focus::-ms-input-placeholder {color: transparent;}
+input:focus::placeholder {color: transparent;}
+.table_scroll {overflow-x: auto;}
+table {border-collapse: collapse;border-spacing: 0;}
+ol,ul,li {padding: 0;margin: 0;}
+button,input[type=text],input[type=password],input[type=search],input[type=tel],input[type=number],input[type=phone],input[type=number],input[type=date],input [type=email],input [type=button],select,textarea {-webkit-appearance: none;-moz-appearance: none;appearance: none;}
+button {border: 0;background: transparent;}
+select::-ms-expand {display: none;}
+div,span,button,input,select,textarea,label,a:active,a:focus {outline: none;}
+h1,h2,h3,h4,h5,h6 {display: block;margin: 0 auto 0.5em auto;}
+button,label,input[type=submit],input[type=reset] {transition: all 0.5s;cursor: pointer;}
+a {text-decoration: none;transition: all 0.5s;}
+@media all and (max-width: 960px) {html,body {font-size: 14px;}}
+@media all and (min-width: 961px) {html,body {font-size: 16px;}}
+
+/* 內容區 */
+.chatroomButton{display: flex;align-items: center;}
+.el-button--primary{background: #75afe0; color:#FFF;border-color:#75afe0;padding: 0;display: flex;justify-content: center;align-items: center;width: 3em;height: 3em;}
+#status-box{color: #696969;font-size: .85rem;margin-bottom: 8px;margin-left: 5px;}
+.container li {list-style: none;padding: 18px;font-size: 1.075rem;}
+.container li.title{background: #FFF;margin-bottom: 18px;box-shadow: 2px 0 6px 0 rgba(0, 0, 0, 0.1);}
+.container li.title .title_in{display: flex;flex-flow: row wrap;max-width: 650px;margin: auto;}
+.container li.title .img{width: calc(39% - 22px);margin-right: 18px;}
+.container li.title .editor{width: 60%;}
+.container li.left .time,
+.container li.right .time{font-size: .85rem;}
+.container li.right .time{color:#5985b2;}
+.container li.left .time{color:#898989;}
+.container li.left b,
+.container li.right b{font-weight: bold;margin-bottom: 5px;display: block; font-size: .95rem}
+.container li.right b{color:#5985b2;}
+.container li.left b{color:#898989;}
+.inline {display:inline;}
+ul {list-style: none;padding: 0;margin: 0 auto;}
+.container {border: 1px solid gainsboro;height: calc(100vh - 145px);min-height: 300px;overflow-y: auto;background: #edf7fd;margin-left: 5px;}
+.inputtext {border: 1px solid #ffffff;overflow-y: auto;background: #ffffff;width: 100%;height: 100%;resize:none;font-size: 16px;}
+.test {border: 1px solid gainsboro;overflow-y: auto;background: #ffffff;margin-left: 5px;height: 100px;}
+.container .right {text-align: right;white-space: pre-line;}
+.container .left {text-align: left;white-space: pre-line;}
+.container .center {text-align: center;color: #888;font-size: 1.075rem;}
+.imagestyle {width: 150px;height: 150px;}
+.container i {display: block;margin-bottom: 10px;}
+.container .fontright {border-radius: 18px 0px 18px 18px;color:#FFF;padding: 3px 8px;display: inline-block;margin-right:15px;font-style: normal;background: 75afe0;font-style: normal;word-break: break-all;text-align: left;}
+.container .fontleft {border-radius: 0px 18px 18px 18px;color:#FFF;padding: 3px 8px;display: inline-block;margin-left:15px;font-style: normal;background: #bfbfbf;word-break: break-all;text-align: left;}
+.img_bor {border-radius: 50%;}
+.cspic {width: 50px;height: 50px;border-radius: 50%;}
+.uploader-icon {font-size: 28px;color: #8c939d;}
+.emoji-container {height: 140px;overflow-y: auto;overflow-x: hidden;position: relative;}
+.emoji-container li {float: left;width: 40px;line-height: 36px;font-size: 30px;padding: 5px;}
+img .msg_img {width: 86%;}
+.emojispan {font-size: 25px;}
