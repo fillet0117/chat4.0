@@ -1,10 +1,10 @@
-// var fs      = require('fs')
-// var https   = require('https')
-// var options = {
-//   key: fs.readFileSync('./key/private.key'),
-//   cert: fs.readFileSync('./key/certificate.crt'),
-//   ca: fs.readFileSync('./key/ca_bundle.crt'),
-// };
+var fs = require("fs");
+var https = require("https");
+var options = {
+  key: fs.readFileSync("./key/private.key"),
+  cert: fs.readFileSync("./key/certificate.crt"),
+  ca: fs.readFileSync("./key/ca_bundle.crt"),
+};
 const path = require("path");
 const express = require("express");
 const app = express();
@@ -14,6 +14,8 @@ const bodyParser = require("body-parser");
 const uuidv1 = require("uuidv1");
 const jwtDecode = require("jwt-decode");
 const moment = require("moment");
+const Redis = require("ioredis");
+const redis = new Redis(6379, "localhost", { password: "ty0321" });
 
 // 模組
 const { dbquery, dbinsert } = require("./utils/DBquery");
@@ -40,8 +42,8 @@ const {
   countOnlineManager,
   getNoBusyManager,
 } = require("./utils/managers");
-const managers = require("./utils/managers");
-const { request } = require("http");
+// const managers = require("./utils/managers");
+const request = require("request");
 // 設定port
 const port = 4477;
 // 攔截和解析所有的請求(處理utf-8編碼的資料)
@@ -54,7 +56,7 @@ app.all("/", (req, res) => {
     res.cookie("SameSite", "Strict"); // google瀏覽器對cookie的設定
     res.cookie("token", req.body.token); // 拿user的token存入聊天室的cookie裡
   }
-  res.sendFile(path.join(__dirname, "public")); // 開啟網址後會傳入public中的index.html
+  res.sendFile(path.join(__dirname, "public/index.html")); // 開啟網址後會傳入public中的index.html
 });
 // 客服端的訊息提示音
 app.get("/aud", (req, res) => {
@@ -90,32 +92,15 @@ io.on("connection", (socket) => {
       name = manager.name;
     }
     // publish(roomid, msgname, msg, pic, time);
+    console.log(name);
+    console.log(roomid);
     io.sockets
       .in(roomid)
       .emit("msgReceived", name, { msg: msg }, roomid, pic, time);
-    // if (managerChat.has(id)) {
-    //   // 後台通知
-    //   chatValue = managerChat.get(id).values();
-    //   chatId = chatValue.next().value;
-    //   if (managerName.has(id)) {
-    //     csname = managerName.get(id).values();
-    //     maname = csname.next().value;
-    //   }
-    //   if (MsgName !== maname) {
-    //     io.to(chatId).emit(
-    //       "msgReceived",
-    //       MsgName,
-    //       { msg: msg },
-    //       roomId,
-    //       pic,
-    //       time
-    //     );
-    //   }
-    // }
   });
 
   // 傳送roomid到客戶端
-  socket.on("getUUID", uuid);
+  socket.emit("getUUID", uuid);
 
   // 訂閱房間
   socket.on("orderroom", (roomid, name, detial, linktime, lang) => {
@@ -332,8 +317,7 @@ io.on("connection", (socket) => {
       let ary = checkManagerInRoom(roomid);
       if (ary.length === 0) {
         // 這裡要再做修改
-        csid = getRedis();
-        setcs(csid, roomid);
+        setcs(roomid);
       }
     }
     if (manager.rooms.length === 0) {
@@ -454,7 +438,7 @@ io.on("connection", (socket) => {
       let managerinroom = checkManagerInRoom(user.room);
       io.sockets
         .in(user.room)
-        .emit("msgReceived", "System", { msg: "會員已離開" }, roomid);
+        .emit("msgReceived", "System", { msg: "會員已離開" }, user.room);
       managerinroom.forEach((value) => {
         value = managerDeleteRoom(value.id, user.room);
         if (value.rooms.length === 0 && value.status === "auto") {
@@ -505,8 +489,7 @@ io.on("connection", (socket) => {
         let ary = checkManagerInRoom(room);
         if (ary.length === 0) {
           // 要再做修改
-          let cs = getRedis();
-          setcs(cs, room);
+          setcs(room);
         }
       });
       io.sockets.in("csroom").emit("csleave", manager.id);
@@ -534,6 +517,7 @@ process.on("uncaughtException", (err) => {
 });
 
 function orderroom(socket, roomid, name, detial, linktime, lang) {
+  socket.join(roomid);
   var user = clientJoin(socket.id, name, roomid, detial, linktime, lang, 0);
   request(`http://freeapi.ipip.net/${detial.ip}`, (error, response, body) => {
     if (error == null) {
@@ -561,25 +545,25 @@ function orderroom(socket, roomid, name, detial, linktime, lang) {
         }
       });
       user = clientEditArea(user.id, body);
+      console.log(user);
     }
   });
   var sql3 = "insert into chat_question (id, name, question) value (0, ?, ?)";
   var addsql = [name, detial.qa];
-  insertcnt(sql3, addsql);
+  dbinsert(sql3, addsql);
   io.sockets
     .in("csroom")
     .emit("getRoom", roomid, name, detial, linktime, false);
   canmsgfun(roomid, socket.id, lang).then(() => {
     // 這裡還要做修改
-    cs = getRedis();
-    setcs(cs, roomid);
+    setcs(roomid);
     console.log(`${socket.id}已订阅${roomid}`);
     getOnline(roomid);
     let count = checkManagerInRoom(roomid);
     let usercount = getAllClient();
     io.sockets.in(roomid).emit("online", count.length + 1);
     io.sockets.in("csroom").emit("user_online", usercount.length);
-    io.socket.in("Chat").emit("getuser", name);
+    io.sockets.in("Chat").emit("getuser", name);
   });
 }
 
@@ -647,15 +631,18 @@ function setcs(roomid) {
 // 取得罐頭訊息
 function canmsgfun(roomid, socketid, lang) {
   return new Promise(function (resolve) {
-    var sql = `Select msg from chat_sys_msg where lang = ${lang}`;
+    var sql = `Select msg from chat_sys_msg where lang = '${lang}'`;
+    console.log(sql);
     dbquery(sql).then(function (msg) {
-      io.to(socketid).emit(
-        "msgReceived",
-        "Canmsg",
-        { msg: msg[0].msg },
-        roomid
-      );
-      resolve(true);
+      if (msg !== false) {
+        io.to(socketid).emit(
+          "msgReceived",
+          "Canmsg",
+          { msg: msg[0].msg },
+          roomid
+        );
+        resolve(true);
+      }
     });
   });
 }

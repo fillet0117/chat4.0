@@ -26,6 +26,8 @@ function managerLeave(id) {
   if (index != -1) {
     const manager = managers.splice(index, 1)[0];
     return manager;
+  } else {
+    return false;
   }
 }
 

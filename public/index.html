@@ -1,839 +1,1489 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <meta charset="UTF-8" />
+    <title></title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale = 1, user-scalable=no ,viewport-fit=cover"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/element-ui@2.13.2/lib/theme-chalk/index.css"
+    />
+    <link rel="stylesheet" href="./router/css/normalize.css" />
+    <style>
+      /* 常用基本設定 */
+      ::-webkit-scrollbar {
+        width: 3px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #c8deec;
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #006eb7;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      figure {
+        margin: 0;
+      }
+      body,
+      a {
+        color: #ffe1af;
+      }
+      img {
+        max-width: 100%;
+        height: auto;
+        vertical-align: bottom;
+        border: none;
+      }
+      .editor a {
+        word-wrap: break-word;
+        word-break: break-all;
+      }
+      :-ms-input-placeholder {
+        opacity: 0.6;
+      }
+      input:focus::-webkit-input-placeholder {
+        color: transparent;
+      }
+      input:focus::-moz-placeholder {
+        color: transparent;
+      }
+      input:focus:-ms-input-placeholder {
+        color: transparent;
+      }
+      input:focus::-ms-input-placeholder {
+        color: transparent;
+      }
+      input:focus::placeholder {
+        color: transparent;
+      }
+      .table_scroll {
+        overflow-x: auto;
+      }
+      table {
+        border-collapse: collapse;
+        border-spacing: 0;
+      }
+      ol,
+      ul,
+      li {
+        padding: 0;
+        margin: 0;
+      }
+      button,
+      input[type="text"],
+      input[type="password"],
+      input[type="search"],
+      input[type="tel"],
+      input[type="number"],
+      input[type="phone"],
+      input[type="number"],
+      input[type="date"],
+      input [type="email"],
+      input [type="button"],
+      select,
+      textarea {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+      }
+      button {
+        border: 0;
+        background: transparent;
+      }
+      select::-ms-expand {
+        display: none;
+      }
+      div,
+      span,
+      button,
+      input,
+      select,
+      textarea,
+      label,
+      a:active,
+      a:focus {
+        outline: none;
+      }
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+        display: block;
+        margin: 0 auto 0.5em auto;
+      }
+      button,
+      label,
+      input[type="submit"],
+      input[type="reset"] {
+        transition: all 0.5s;
+        cursor: pointer;
+      }
+      a {
+        text-decoration: none;
+        transition: all 0.5s;
+      }
+      @media all and (max-width: 960px) {
+        html,
+        body {
+          font-size: 14px;
+        }
+      }
+      @media all and (min-width: 961px) {
+        html,
+        body {
+          font-size: 16px;
+        }
+      }
 
-<head>
-  <meta charset="UTF-8">
-  <title></title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale = 1, user-scalable=no ,viewport-fit=cover">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
-  <link rel="stylesheet" href="https://unpkg.com/element-ui@2.13.2/lib/theme-chalk/index.css">
-  <link rel="stylesheet" href="./router/css/normalize.css">
-  <style>
-    /* 常用基本設定 */
-    ::-webkit-scrollbar{width:3px;}
-    ::-webkit-scrollbar-thumb{background:#c8deec;border-radius:10px;}
-    ::-webkit-scrollbar-thumb:hover {background: #006eb7;}
-    * {box-sizing: border-box;}
-    figure {margin: 0;}
-    body,a {color: #ffe1af;}
-    img {max-width: 100%;height: auto;vertical-align: bottom;border: none;}
-    .editor a {word-wrap: break-word;word-break: break-all;}
-    :-ms-input-placeholder {opacity: 0.6;}
-    input:focus::-webkit-input-placeholder {color: transparent;}
-    input:focus::-moz-placeholder {color: transparent;}
-    input:focus:-ms-input-placeholder {color: transparent;}
-    input:focus::-ms-input-placeholder {color: transparent;}
-    input:focus::placeholder {color: transparent;}
-    .table_scroll {overflow-x: auto;}
-    table {border-collapse: collapse;border-spacing: 0;}
-    ol,ul,li {padding: 0;margin: 0;}
-    button,input[type=text],input[type=password],input[type=search],input[type=tel],input[type=number],input[type=phone],input[type=number],input[type=date],input [type=email],input [type=button],select,textarea {-webkit-appearance: none;-moz-appearance: none;appearance: none;}
-    button {border: 0;background: transparent;}
-    select::-ms-expand {display: none;}
-    div,span,button,input,select,textarea,label,a:active,a:focus {outline: none;}
-    h1,h2,h3,h4,h5,h6 {display: block;margin: 0 auto 0.5em auto;}
-    button,label,input[type=submit],input[type=reset] {transition: all 0.5s;cursor: pointer;}
-    a {text-decoration: none;transition: all 0.5s;}
-    @media all and (max-width: 960px) {html,body {font-size: 14px;}}
-    @media all and (min-width: 961px) {html,body {font-size: 16px;}}
+      /* 內容區 */
+      h4 {
+        font-size: 1.5rem;
+      }
+      h5 {
+        font-size: 1rem;
+      }
+      body {
+        background: #f8f8ff;
+        padding: 1rem;
+        font-family: "Heiti TC", "Microsoft JhengHei", Arial;
+      }
+      .el-image-viewer__mask {
+        opacity: 0.8;
+      }
+      .chatroomButton,
+      .chatroomButton_in {
+        display: flex;
+        align-items: flex-end;
+      }
+      .chatroomButton {
+        width: calc(100vw - 2rem);
+        border-top: 1px solid gainsboro;
+        overflow-y: auto;
+        position: fixed;
+        margin: 0 1rem;
+        padding: 1rem 0;
+        left: 0;
+        right: 0;
+        bottom: 0.5rem;
+        background: ghostwhite;
+      }
+      .chatroomButton_in {
+        background: #fff;
+        width: 100%;
+      }
+      .el-upload-list {
+        display: none;
+      }
+      .el-button--primary {
+        background: transparent;
+        color: #75afe0;
+        border: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.875rem;
+        border-radius: 0 5px 5px 0;
+      }
+      #status-box {
+        color: #696969;
+        font-size: 0.75rem;
+        margin-bottom: 8px;
+        text-align: right;
+      }
+      .container {
+        margin-bottom: 1rem;
+      }
+      .container .title {
+        background: #fff;
+        box-shadow: 0 0 10px 0 rgba(0, 58, 118, 0.15);
+        padding: 1rem;
+        position: relative;
+        height: 228px;
+        overflow-y: auto;
+      }
+      .container .title .title_in {
+        display: flex;
+        flex-flow: row wrap;
+        justify-content: center;
+        justify-content: center;
+        max-width: 650px;
+        margin: auto;
+      }
+      .container .title .img {
+        width: calc(39% - 22px);
+        max-width: 200px;
+        margin-right: 18px;
+      }
+      .img2 {
+        width: 50% !important;
+        max-width: 260px !important;
+        margin-left: 25% !important;
+      }
+      .container .title .editor {
+        width: 60%;
+      }
+      .container .right,
+      .container .left {
+        display: flex;
+        flex-flow: row wrap;
+      }
+      .container .right {
+        text-align: right;
+        justify-content: flex-end;
+      }
+      .container .left {
+        text-align: left;
+      }
+      .container .left .fontleft {
+        order: 2;
+      }
+      .container .left .name {
+        order: 1;
+        margin-right: 0.5em;
+      }
+      .container time {
+        font-size: 0.85rem;
+        margin-right: 0.5em;
+      }
+      .container .right time {
+        color: #5985b2;
+        display: block;
+      }
+      .container .left time {
+        color: #898989;
+      }
+      .container .left b,
+      .container .right b {
+        font-weight: bold;
+        display: block;
+        font-size: 0.875rem;
+      }
+      .container .right b {
+        color: #5985b2;
+      }
+      .container .left b {
+        color: #898989;
+      }
+      .inline {
+        display: inline;
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 0 auto;
+      }
+      textarea {
+        border: 0;
+        width: 100%;
+        resize: none;
+        font-size: 1rem;
+        background: transparent;
+        height: 2.3em;
+        padding: 0.5em 1rem;
+        margin-bottom: 0.35rem;
+        max-height: 25vh;
+        overflow-y: scroll;
+        margin: auto;
+      }
+      .test {
+        border: 1px solid gainsboro;
+        overflow-y: auto;
+        background: #ffffff;
+        margin-left: 5px;
+        height: 100px;
+      }
+      .chat_info {
+        text-align: center;
+        color: #888;
+        font-size: 1.075rem;
+        border: 1px solid gainsboro;
+        border-top: 0;
+        background: #edf7fd;
+        min-height: calc(75vh - 301px);
+        padding: 1rem;
+        height: calc(100vh - 334px);
+        overflow-y: auto;
+      }
+      .imagestyle {
+        width: 150px;
+        height: 150px;
+      }
+      .container .fontleft,
+      .container .fontright {
+        max-width: calc(100% - 6rem);
+      }
+      .container .fontleft {
+        margin-left: 0.5rem;
+      }
+      .container .fontright {
+        margin-right: 0.5rem;
+      }
+      .container .msg {
+        padding: 0.5em 1em;
+        color: #fff;
+        white-space: pre-line;
+      }
+      .container .fontright .msg {
+        border-radius: 25px 0 25px 25px;
+        background: #75afe0;
+        text-align: left;
+      }
+      .container .fontleft .msg {
+        border-radius: 0 25px 25px 25px;
+        background: #bfbfbf;
+      }
+      .img_bor {
+        border-radius: 50%;
+      }
+      .cspic {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+      }
+      .uploader-icon {
+        font-size: 28px;
+        color: #8c939d;
+      }
+      .emoji-container {
+        height: 140px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        position: relative;
+      }
+      .emoji-container li {
+        float: left;
+        width: 40px;
+        line-height: 36px;
+        font-size: 30px;
+        padding: 5px;
+      }
+      img .msg_img {
+        width: 86%;
+      }
+      .el-popover__reference {
+        font-size: 1.5rem;
+        padding: 0 0.5rem 3px 0;
+      }
+      .el-upload {
+        padding: 0 0.5rem 0.1rem 0;
+      }
+      .timeMsg {
+        display: flex;
+        flex-flow: row wrap;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+        max-width: 70vw;
+        width: 100%;
+      }
+      .right .timeMsg {
+        justify-content: flex-end;
+      }
+      .right .timeMsg .time {
+        margin-right: 0.5rem;
+      }
+      .name {
+        text-align: center;
+        max-width: 5rem;
+      }
+      .name img {
+        border-radius: 50%;
+        max-width: 45px;
+        overflow: hidden;
+        margin-bottom: 0.5em;
+      }
+      .center {
+        margin-bottom: 0.5em;
+      }
+      .login_bg {
+        display: flex;
+        flex-flow: row wrap;
+        justify-content: center;
+        align-items: center;
+        width: calc(100vw - 2rem);
+        height: 90vh;
+      }
+      .login {
+        max-width: 550px;
+        margin: auto;
+        display: flex;
+        flex-flow: row wrap;
+      }
+      .login h1 {
+        width: 100%;
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: #888;
+        font-size: 1.5rem;
+        border-bottom: 1px solid #d2d2d2;
+        padding-bottom: 0.5em;
+        margin-bottom: 1em;
+      }
+      .login img {
+        width: 20%;
+        max-width: 20px;
+        margin-right: 0.5rem;
+      }
+      .login .el-form-item {
+        display: flex;
+        width: 100%;
+      }
+      .login .el-form-item__label {
+        display: none;
+      }
+      .login .flex {
+        display: flex;
+        justify-content: space-around;
+      }
+      .login .el-button--primary {
+        border-radius: 5px;
+        background: #75afe0;
+        color: #fff;
+        padding: 0.5rem;
+      }
+      .el-button--primary,
+      .el-popover__reference {
+        padding: 0 0.5rem 0.5rem 0;
+      }
+      .login .el-form-item__content,
+      .login button {
+        width: 100%;
+      }
+      .login .el-form-item__content .insite {
+        text-align: center;
+      }
+      .login .loginButton {
+        margin-bottom: 0;
+      }
+      .login .el-button--info {
+        background: transparent;
+        border: 0;
+        color: #888;
+      }
+      .login .el-button--info span {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .username .el-input input,
+      .password .el-input input {
+        background-repeat: no-repeat;
+        background-size: 16px auto;
+        background-position: 8px center;
+        padding-left: 32px;
+      }
+      .username .el-input input {
+        background-image: url(./router/images/user.svg);
+      }
+      .password .el-input input {
+        background-image: url(./router/images/password.svg);
+      }
+      .imglang {
+        height: 10%;
+        width: 10%;
+        margin-right: 5px;
+        border-radius: 50%;
+        margin-bottom: 5px;
+      }
 
-    /* 內容區 */
-    h4{font-size: 1.5rem;}
-    h5{font-size: 1rem;}
-    body{background: #f8f8ff;padding:1rem;font-family: "Heiti TC", "Microsoft JhengHei", Arial;}
-    .el-image-viewer__mask{opacity: .8;}
-    .chatroomButton,.chatroomButton_in{display: flex;align-items: flex-end;}
-    .chatroomButton{width: calc(100vw - 2rem);border-top: 1px solid gainsboro;overflow-y: auto;position: fixed;margin:0 1rem;padding: 1rem 0;left: 0;right: 0;bottom: .5rem;background: ghostwhite;}
-    .chatroomButton_in{background: #FFF;width: 100%;}
-    .el-upload-list {display: none;}
-    .el-button--primary{background: transparent;color:#75afe0;border:0;padding: 0;display: flex;justify-content: center;align-items: center;font-size: 1.875rem;border-radius: 0 5px 5px 0;}
-    #status-box{color: #696969;font-size: .75rem;margin-bottom: 8px;text-align: right;}
-    .container {margin-bottom: 1rem;}
-    .container .title{background: #FFF;box-shadow:0 0 10px 0 rgba(0, 58, 118, .15);padding: 1rem;position: relative;height: 228px;overflow-y: auto;}
-    .container .title .title_in{display: flex;flex-flow: row wrap;justify-content: center;justify-content: center;max-width: 650px;margin: auto;}
-    .container .title .img{width: calc(39% - 22px);max-width: 200px;margin-right: 18px;}
-    .img2{width: 50% !important;max-width: 260px !important;margin-left: 25% !important;}
-    .container .title .editor{width: 60%;}
-    .container .right,.container .left{display: flex;flex-flow: row wrap;}
-    .container .right {text-align: right;justify-content: flex-end;}
-    .container .left {text-align: left;}
-    .container .left .fontleft{order:2;}
-    .container .left .name{order:1;margin-right: .5em;}
-    .container time{font-size: .85rem;margin-right: .5em;}
-    .container .right time{color:#5985b2;display: block;}
-    .container .left time{color:#898989;}
-    .container .left b,
-    .container .right b{font-weight: bold;display: block; font-size: .875rem}
-    .container .right b{color:#5985b2;}
-    .container .left b{color:#898989;}
-    .inline {display:inline;}
-    ul {list-style: none;padding: 0;margin: 0 auto;}
-    textarea {border: 0;width: 100%;resize:none;font-size: 1rem;background: transparent;height: 2.3em;padding: .5em 1rem;margin-bottom: .35rem;max-height: 25vh;overflow-y: scroll;margin:auto;}
-    .test {border: 1px solid gainsboro;overflow-y: auto;background: #ffffff;margin-left: 5px;height: 100px;}
-    .chat_info{text-align: center;color: #888;font-size: 1.075rem;border: 1px solid gainsboro;border-top:0;background: #edf7fd;min-height: calc(75vh - 301px);padding: 1rem;height: calc(100vh - 334px);overflow-y: auto;}
-    .imagestyle {width: 150px;height: 150px;}
-    .container .fontleft,
-    .container .fontright{max-width: calc(100% - 6rem);}
-    .container .fontleft{margin-left:.5rem;}
-    .container .fontright{margin-right:.5rem;}
-    .container .msg{padding: .5em 1em;color:#FFF;white-space: pre-line;}
-    .container .fontright .msg{border-radius: 25px 0 25px 25px ;background: #75afe0;text-align: left;}
-    .container .fontleft .msg{border-radius: 0 25px 25px 25px;background: #bfbfbf;}
-    .img_bor {border-radius: 50%;}
-    .cspic {width: 50px;height: 50px;border-radius: 50%;}
-    .uploader-icon {font-size: 28px;color: #8c939d;}
-    .emoji-container {height: 140px;overflow-y: auto;overflow-x: hidden;position: relative;}
-    .emoji-container li {float: left;width: 40px;line-height: 36px;font-size: 30px;padding: 5px;}
-    img .msg_img {width: 86%;}
-    .el-popover__reference {font-size: 1.5rem;padding: 0 .5rem 3px 0;}
-    .el-upload{padding: 0 .5rem .1rem 0;}
-    .timeMsg{display: flex;flex-flow: row wrap;align-items: flex-start;margin-bottom: 1rem;max-width: 70vw;width: 100%;}
-    .right .timeMsg{justify-content: flex-end;}
-    .right .timeMsg .time{margin-right: .5rem;}
-    .name {text-align: center;max-width: 5rem;}
-    .name img{border-radius:50%;max-width: 45px;overflow: hidden;margin-bottom: .5em;}
-    .center{margin-bottom: .5em;}
-    .login_bg{display: flex;flex-flow: row wrap;justify-content: center;align-items: center;width: calc(100vw - 2rem);height: 90vh;}
-    .login{max-width: 550px;margin: auto;display: flex;flex-flow: row wrap;}
-    .login h1{width: 100%;text-align: center;display: flex;justify-content: center;align-items: center;color: #888;font-size: 1.5rem;border-bottom: 1px solid #d2d2d2;padding-bottom: .5em;margin-bottom: 1em;}
-    .login img{width: 20%;max-width: 20px;margin-right: .5rem;}
-    .login .el-form-item{display: flex;width: 100%;}
-    .login .el-form-item__label{display: none;}
-    .login .flex{display: flex;justify-content: space-around;}
-    .login .el-button--primary{border-radius: 5px;background: #75afe0;color: #FFF;padding: .5rem;}
-    .el-button--primary,.el-popover__reference{padding: 0 .5rem .5rem 0;}
-    .login .el-form-item__content,
-    .login button{width: 100%;}
-    .login .el-form-item__content .insite {text-align: center}
-    .login .loginButton {margin-bottom: 0;}
-    .login .el-button--info{background: transparent;border: 0;color: #888;}
-    .login .el-button--info span{display: flex;justify-content: center;align-items: center;}
-    .username .el-input input,
-    .password .el-input input{background-repeat: no-repeat;background-size:16px auto;background-position: 8px center;padding-left: 32px;}
-    .username .el-input input{background-image: url(./router/images/user.svg);}
-    .password .el-input input{background-image: url(./router/images/password.svg);}
-    .imglang{height: 10%;width: 10%;margin-right: 5px; border-radius: 50%; margin-bottom: 5px;}
+      @media only screen and (max-width: 768px) {
+        .container .title {
+          height: 12vh;
+        }
+        .container .title .img img {
+          max-height: 9vh;
+        }
+        .chat_info {
+          height: calc(88vh - 109px);
+        }
+      }
+      @media only screen and (min-width: 768px) {
+        .el-button--primary:focus,
+        .el-button--primary:hover {
+          background: transparent;
+          color: #3a8ee6;
+        }
+        .login .el-button--primary:focus,
+        .login .el-button--primary:hover {
+          border-radius: 5px;
+          background: #3a8ee6;
+          color: #fff;
+          padding: 0.5rem;
+        }
+      }
+    </style>
+  </head>
 
-    @media only screen and (max-width: 768px) {
-      .container .title{height: 12vh;}
-      .container .title .img img{max-height: 9vh; }
-      .chat_info{height: calc(88vh - 109px);}
-    }
-    @media only screen and (min-width: 768px) {
-    .el-button--primary:focus, .el-button--primary:hover{background: transparent;color:#3a8ee6;}
-    .login .el-button--primary:focus,.login .el-button--primary:hover{border-radius: 5px;background: #3a8ee6;color: #FFF;padding: .5rem;}
-    }
-  </style>
-</head>
-
-<body>
-  <div id="app">
-    <el-dropdown v-if="dis==false">
-      <el-button style="font-size: small;" type="primary" >
-        <i class="el-icon-setting el-icon--left"></i><i class="el-icon-arrow-down el-icon--right"></i>
-      </el-button>
-      <el-dropdown-menu slot="dropdown">
-        <el-dropdown-item @click.native="handleEdit('chn')"><img class="imglang" src="./router/images/lang_chn.jpg">CHN</el-dropdown-item>
-        <el-dropdown-item @click.native="handleEdit('eng')"><img class="imglang" src="./router/images/lang_eng.jpg">ENG</el-dropdown-item>
-        <el-dropdown-item @click.native="handleEdit('vnm')"><img class="imglang" src="./router/images/lang_vnm.jpg">VNM</el-dropdown-item>
-        <el-dropdown-item @click.native="handleEdit('thai')"><img class="imglang" src="./router/images/lang_thai.jpg">THAI</el-dropdown-item>
-      </el-dropdown-menu>
-    </el-dropdown>
-    <div v-if="dis==false" class="login_bg">
-      <el-form ref="form1" class="login" :model="form1">
-        <el-form-item label="" class="username">
-          <img class="img2" src="./router/images/chat.png">
-        </el-form-item>
-        <!-- <h1><img src="./router/images/login.svg?1" alt="登入"><span>请输入会员账号/昵称</span></h1>
+  <body>
+    <div id="app">
+      <el-dropdown v-if="dis==false">
+        <el-button style="font-size: small;" type="primary">
+          <i class="el-icon-setting el-icon--left"></i
+          ><i class="el-icon-arrow-down el-icon--right"></i>
+        </el-button>
+        <el-dropdown-menu slot="dropdown">
+          <el-dropdown-item @click.native="handleEdit('chn')"
+            ><img
+              class="imglang"
+              src="./router/images/lang_chn.jpg"
+            />CHN</el-dropdown-item
+          >
+          <el-dropdown-item @click.native="handleEdit('eng')"
+            ><img
+              class="imglang"
+              src="./router/images/lang_eng.jpg"
+            />ENG</el-dropdown-item
+          >
+          <el-dropdown-item @click.native="handleEdit('vnm')"
+            ><img
+              class="imglang"
+              src="./router/images/lang_vnm.jpg"
+            />VNM</el-dropdown-item
+          >
+          <el-dropdown-item @click.native="handleEdit('thai')"
+            ><img
+              class="imglang"
+              src="./router/images/lang_thai.jpg"
+            />THAI</el-dropdown-item
+          >
+        </el-dropdown-menu>
+      </el-dropdown>
+      <div v-if="dis==false" class="login_bg">
+        <el-form ref="form1" class="login" :model="form1">
+          <el-form-item label="" class="username">
+            <img class="img2" src="./router/images/chat.png" />
+          </el-form-item>
+          <!-- <h1><img src="./router/images/login.svg?1" alt="登入"><span>请输入会员账号/昵称</span></h1>
         <el-form-item label="" class="username">
           <el-input v-model="form1.accountcode" placeholder="Username"></el-input>
         </el-form-item> -->
-        <!-- <h2 style="color:rgba(0, 0, 0, .30)">请选择您欲咨询的问题</h2> -->
-        <h2 style="color:rgba(0, 0, 0, .30)">{{lang.selectquestion}}</h2>
-        <el-form-item label="問題" style="text-align: center;">
-          <el-radio-group v-model="form1.question">
-            <el-radio label="deposit">{{lang.deposit}}</el-radio>
-            <el-radio label="withdraw">{{lang.withdraw}}</el-radio>
-            <el-radio label="promo">{{lang.promo}}</el-radio>
-            <el-radio label="game">{{lang.game}}</el-radio>
-            <el-radio label="other">{{lang.other}}</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item class="loginButton">
-          <el-button type="primary" @click="noReg">{{lang.submit}}</el-button>
-        </el-form-item>
-      </el-form>
-    </div>
-    <div v-if="dis==true">
-      <div id="status-box">{{lang.onlineuser}} : {{online}}</div>
-      <ul class="inline">
-        <li v-for="(item, index, key) in cslist" :key="key" class="inline">
-          <el-image class="cspic" :src="item" :preview-src-list="cslist">
-          </el-image>
-        </li>
-      </ul>
-    </div>
-    <div v-if="dis==true">
-      <div class="container">
-        <div class="title">
-          <div class="title_in">
-            <div class="img">
-              <img src="./router/images/chat.png">
-            </div>
-            <div class="editor">
-              <span v-html="rule"></span>
+          <!-- <h2 style="color:rgba(0, 0, 0, .30)">请选择您欲咨询的问题</h2> -->
+          <h2 style="color: rgba(0, 0, 0, 0.3);">{{lang.selectquestion}}</h2>
+          <el-form-item label="問題" style="text-align: center;">
+            <el-radio-group v-model="form1.question">
+              <el-radio label="deposit">{{lang.deposit}}</el-radio>
+              <el-radio label="withdraw">{{lang.withdraw}}</el-radio>
+              <el-radio label="promo">{{lang.promo}}</el-radio>
+              <el-radio label="game">{{lang.game}}</el-radio>
+              <el-radio label="other">{{lang.other}}</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item class="loginButton">
+            <el-button type="primary" @click="noReg">{{lang.submit}}</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
+      <div v-if="dis==true">
+        <div id="status-box">{{lang.onlineuser}} : {{online}}</div>
+        <ul class="inline">
+          <li v-for="(item, index, key) in cslist" :key="key" class="inline">
+            <el-image class="cspic" :src="item" :preview-src-list="cslist">
+            </el-image>
+          </li>
+        </ul>
+      </div>
+      <div v-if="dis==true">
+        <div class="container">
+          <div class="title">
+            <div class="title_in">
+              <div class="img">
+                <img src="./router/images/chat.png" />
+              </div>
+              <div class="editor">
+                <span v-html="rule"></span>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="chat_info" ref="chatContent">
-          <div v-for="(item, index, key) in msglist" :key="key">
-            <div v-if="item.style == 'center'" :class="item.style">
-              <div v-html="item.msg"></div>
-            </div>
-            <div v-if="item.style != 'center' && item.style != 'Canmsg'" :class="item.style">
-              <div class="timeMsg">
-                <div :class="item.fontstyle">
-                  <div v-if="item.image == false" class="msg" v-html="item.msg"></div>
-                  <el-image v-if="item.image" :src="item.msg" :preview-src-list="srcList">
-                  </el-image>
-                  <time>{{item.curtime}}</time>
-                </div>
-                <div v-if="item.style == 'left'" class="name">
-                  <img v-if="item.photo != '' && item.style == 'left'" :src="item.photo" class="img_bor" alt="photo" onerror="javascript:this.src='./router/images/member_photoNo.jpg'"/>
-                  <img v-else src="./router/images/member_photoNo.jpg?1" alt="photo">
-                  <b>{{item.name}}</b>
+          <div class="chat_info" ref="chatContent">
+            <div v-for="(item, index, key) in msglist" :key="key">
+              <div v-if="item.style == 'center'" :class="item.style">
+                <div v-html="item.msg"></div>
+              </div>
+              <div
+                v-if="item.style != 'center' && item.style != 'Canmsg'"
+                :class="item.style"
+              >
+                <div class="timeMsg">
+                  <div :class="item.fontstyle">
+                    <div
+                      v-if="item.image == false"
+                      class="msg"
+                      v-html="item.msg"
+                    ></div>
+                    <el-image
+                      v-if="item.image"
+                      :src="item.msg"
+                      :preview-src-list="srcList"
+                    >
+                    </el-image>
+                    <time>{{item.curtime}}</time>
+                  </div>
+                  <div v-if="item.style == 'left'" class="name">
+                    <img
+                      v-if="item.photo != '' && item.style == 'left'"
+                      :src="item.photo"
+                      class="img_bor"
+                      alt="photo"
+                      onerror="javascript:this.src='./router/images/member_photoNo.jpg'"
+                    />
+                    <img
+                      v-else
+                      src="./router/images/member_photoNo.jpg?1"
+                      alt="photo"
+                    />
+                    <b>{{item.name}}</b>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-    <div v-if="dis==true" class="chatroomButton">
-      <el-upload list-type="upload-demo" action="" :auto-upload="false" :on-change="getFile" :limit="1" accept=".jpg,.jpeg,.png,.gif,.JPG,.JPEG,.GIF" ref="upload">
-        <i class="el-icon-picture-outline uploader-icon"></i>
-      </el-upload>
-      <div class="chatroomButton_in">
-        <textarea type="textarea" placeholder="Please enter" v-model="form.msg" @keyup.enter.exact="publish()" :style="{height:textareaHeight + 'px'}">
+      <div v-if="dis==true" class="chatroomButton">
+        <el-upload
+          list-type="upload-demo"
+          action=""
+          :auto-upload="false"
+          :on-change="getFile"
+          :limit="1"
+          accept=".jpg,.jpeg,.png,.gif,.JPG,.JPEG,.GIF"
+          ref="upload"
+        >
+          <i class="el-icon-picture-outline uploader-icon"></i>
+        </el-upload>
+        <div class="chatroomButton_in">
+          <textarea
+            type="textarea"
+            placeholder="Please enter"
+            v-model="form.msg"
+            @keyup.enter.exact="publish()"
+            :style="{height:textareaHeight + 'px'}"
+          >
           </textarea>
-        <el-popover placement="top" width="400" height="400" trigger="click">
-          <ul class="emoji-container">
-            <li @click="emojiclick(item)" v-for="(item, index, key) in emojilist" :key="key">{{item}}</li>
-          </ul>
-          <el-button slot="reference" type="text">&#x1F601;</el-button>
-        </el-popover>
-        <el-button type="primary" @click="publish()" class="el-icon-s-promotion"></el-button>
+          <el-popover placement="top" width="400" height="400" trigger="click">
+            <ul class="emoji-container">
+              <li
+                @click="emojiclick(item)"
+                v-for="(item, index, key) in emojilist"
+                :key="key"
+              >
+                {{item}}
+              </li>
+            </ul>
+            <el-button slot="reference" type="text">&#x1F601;</el-button>
+          </el-popover>
+          <el-button
+            type="primary"
+            @click="publish()"
+            class="el-icon-s-promotion"
+          ></el-button>
+        </div>
       </div>
     </div>
-  </div>
-  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-  <script src="https://unpkg.com/element-ui@2.13.2/lib/index.js"></script>
-  <script src="http://api.map.baidu.com/api?v=1.4" type="text/javascript"></script>
-  <script src="./router/lang/lang.js"></script>
-  <script type="text/javascript">
-  var app = new Vue({
-    el: '#app',
-    data() {
-      return {
-        chn: chn,
-        eng: eng,
-        vnm: vnm,
-        thai: thai,
-        lang: chn,
-        turnlang: 'chn',
-        socket: '',
-        online: 0,
-        uuid: '',
-        id: '',
-        accountcode: '',
-        msg_name: '',
-        width: '',
-        height: '',
-        dis: false,
-        cslist: [],
-        msglist: [],
-        photo: '',
-        form: {
-          msg: ''
-        },
-        textareaHeight: '',
-        emojis: ["0x1F600", "0x1F601", "0x1F602", "0x1F603", "0x1F604",
-          "0x1F605", "0x1F606", "0x1F607", "0x1F608", "0x1F609",
-          "0x1F60A", "0x1F60B", "0x1F60C", "0x1F60D", "0x1F60E",
-          "0x1F60F", "0x1F610", "0x1F611", "0x1F612", "0x1F613",
-          "0x1F614", "0x1F615", "0x1F616", "0x1F617", "0x1F618",
-          "0x1F619", "0x1F61A", "0x1F61B", "0x1F61C", "0x1F61D",
-          "0x1F61E", "0x1F61F", "0x1F620", "0x1F621", "0x1F622",
-          "0x1F623", "0x1F624", "0x1F625", "0x1F626", "0x1F627",
-          "0x1F628", "0x1F629", "0x1F62A", "0x1F62B", "0x1F62C",
-          "0x1F62D", "0x1F62E", "0x1F62F", "0x1F630", "0x1F631",
-          "0x1F632", "0x1F633", "0x1F634", "0x1F635", "0x1F636",
-          "0x1F637", "0x1F638", "0x1F639", "0x1F44B", "0x1F44C",
-          "0x1F44D", "0x1F64F"
-        ],
-        emojilist: [],
-        upfile: '',
-        srcList: [],
-        canmsg: '',
-        rule: '',
-        form1: {
-          accountcode: '',
-          password: '',
-          question: ''
-        },
-        dialogImageUrl: '',
-        dialogVisible: false
-      }
-    },
-    created() {
-      window.addEventListener('beforeunload', e => this.beforeunloadFn(e));
-    },
-    mounted() {
-      var _this = this;
-      this.setemojis();
-      this.socket = io('http://vip66741.com');
-      var ary = this.getcookie();
-      if (ary.hasOwnProperty("lang")) {
-        this.handleEdit(ary.lang);
-      }
-      var siv = setInterval(function() {
-        if (_this.socket.connected == false) {
-          alert(_this.lang.disconnect);
-          clearInterval(siv);
-        }
-      }, 5000);
-      this.width = window.innerWidth;
-      this.height = window.innerHeight;
-      this.setCookie('SameSite', 'Strict'); // chrome 需要設置cookie設定
-      var cookie = document.cookie;
-      // 顯示room有多少人
-      this.socket.on('online', function(amount) {
-        _this.online = amount;
-      });
-      // 訊息進來，顯示在畫面上
-      this.socket.on('msgReceived', function(name, data, channel, sopic, time) {
-        _this.addMsg(name, data, channel, sopic, time);
-      });
-      // 訂閱room
-      this.socket.on('getUUID', function(data) {
-        _this.uuid = data;
-        let cookie = document.cookie;
-        if (cookie.length != 0) {
-          let arycookie = _this.getcookie();
-          _this.socket.emit('getId', arycookie, _this.uuid)
-        }
-      });
-      // 取得accountid
-      this.socket.on('setId', function(data) {
-        _this.id = data
-      });
-      // 取得accountcode
-      this.socket.on('setaccountcode', function(accode) {
-        _this.accountcode = accode;
-        _this.msg_name = accode;
-      });
-      // 取得roomid
-      this.socket.on('setCookie', function(data) {
-        _this.uuid = data;
-        _this.setCookie('socketRoom', data);
-      });
-      // kicked
-      this.socket.on('kicked', function() {
-        _this.socket.disconnect();
-        _this.msglist.push({
-          msg: _this.lang.disconnect,
-          style: 'center',
-          fontstyle: 'fontcenter'
-        });
-      });
-      // 雙開
-      this.socket.on('userdouble', function() {
-        _this.socket.disconnect();
-        _this.msglist.push({
-          msg: _this.lang.userdouble,
-          style: 'center',
-          fontstyle: 'fontcenter'
-        });
-      });
-    },
-    methods: {
-      handleEdit(command) {
-        if (this.turnlang != command) {
-          switch (command) {
-            case 'chn':
-              this.lang = this.chn;
-              break;
-            case 'eng':
-              this.lang = this.eng;
-              break;
-            case 'vnm':
-              this.lang = this.vnm;
-              break;
-            case 'thai':
-              this.lang = this.thai;
-              break;
-          }
-          this.turnlang = command;
-          this.setCookie('lang', this.turnlang);
-          this.socket.emit("getcanmsg", this.uuid, this.turnlang);
-        }
-      },
-      handlePictureCardPreview(file) {
-        this.dialogImageUrl = file.url;
-        this.dialogVisible = true;
-      },
-      beforeunloadFn(e) {
-        if (this.socket != '') {
-          this.socket.disconnect();
-          var exp = new Date();
-          exp.setTime(exp.getTime() - 1);
-          document.cookie = 'token= ;expires=' + exp.toGMTString() + " ;path=/";
-        }
-      },
-      getemoji(str) {
-        var index = str.indexOf("0x1");
-        var final = '';
-        var third = '';
-        if (index != -1) {
-          do {
-            let first = '';
-            let test = '';
-            first = str.substr(0, index);
-            test = str.substr(index, 7);
-            third = str.substr(index + 7);
-            if (typeof test != 'NaN') {
-              final += first + String.fromCodePoint(test); //+ third;
-            }
-            str = third;
-            index = str.indexOf("0x1");
-          } while (index != -1);
-          final += third;
-        } else {
-          final = str;
-        }
-        return final;
-      },
-      // 判斷圖片
-      checkImg(data) {
-        let array = data.split(",", 2);
-        var string = '';
-        if (array[0].indexOf("data:image/") == -1) {
-          return false;
-        }
-        try {
-          string = btoa(atob(array[1]));
-        } catch (e) {
-          return false;
-        }
-        if (string == array[1]) {
-          return true;
-        }
-        return false;
-      },
-      // 新增訊息
-      addMsg(name, data, channel, sopic, time) {
-        var msgstyle = '';
-        var da = '';
-        if (name == this.msg_name) { // 使用者訊息
-          msgstyle = 'right';
-        } else if (name == 'System') { // 系統訊息
-          msgstyle = 'center';
-          if (data.msg.indexOf('加入') != -1) {
-            str = data.msg.split(" ")
-            data.msg = str[0] + ' ' + this.lang.enter
-          }
-          if (data.msg.indexOf("離開") != -1) {
-            str = data.msg.split(" ")
-            data.msg = str[0] + ' ' + this.lang.leave
-          }
-          if (data.msg.indexOf("客服") != -1) {
-            data.msg = this.lang.busy
-          }
-        } else if (name == 'Canmsg') { // 罐頭訊息
-          msgstyle = 'Canmsg'
-        } else { // 客服訊息
-          msgstyle = 'left';
-        }
-        if (name != 'Canmsg') {
-          if (data.msg.indexOf("0x1") != -1 && this.checkImg(data.msg) == false) {
-            data.msg = this.getemoji(data.msg);
-          }
-          da = {
-            curtime: time, // 訊息的時間
-            name: name, // 名稱
-            msg: data.msg, // 訊息內容
-            style: msgstyle, // 至左還是至右
-            fontstyle: 'font' + msgstyle, // 訊息的style
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui@2.13.2/lib/index.js"></script>
+    <script
+      src="http://api.map.baidu.com/api?v=1.4"
+      type="text/javascript"
+    ></script>
+    <script src="./router/lang/lang.js"></script>
+    <script type="text/javascript">
+      var app = new Vue({
+        el: "#app",
+        data() {
+          return {
+            chn: chn,
+            eng: eng,
+            vnm: vnm,
+            thai: thai,
+            lang: chn,
+            turnlang: "chn",
+            socket: "",
+            online: 0,
+            uuid: "",
+            id: "",
+            accountcode: "",
+            msg_name: "",
+            width: "",
+            height: "",
+            dis: false,
+            cslist: [],
+            msglist: [],
+            photo: "",
+            form: {
+              msg: "",
+            },
+            textareaHeight: "",
+            emojis: [
+              "0x1F600",
+              "0x1F601",
+              "0x1F602",
+              "0x1F603",
+              "0x1F604",
+              "0x1F605",
+              "0x1F606",
+              "0x1F607",
+              "0x1F608",
+              "0x1F609",
+              "0x1F60A",
+              "0x1F60B",
+              "0x1F60C",
+              "0x1F60D",
+              "0x1F60E",
+              "0x1F60F",
+              "0x1F610",
+              "0x1F611",
+              "0x1F612",
+              "0x1F613",
+              "0x1F614",
+              "0x1F615",
+              "0x1F616",
+              "0x1F617",
+              "0x1F618",
+              "0x1F619",
+              "0x1F61A",
+              "0x1F61B",
+              "0x1F61C",
+              "0x1F61D",
+              "0x1F61E",
+              "0x1F61F",
+              "0x1F620",
+              "0x1F621",
+              "0x1F622",
+              "0x1F623",
+              "0x1F624",
+              "0x1F625",
+              "0x1F626",
+              "0x1F627",
+              "0x1F628",
+              "0x1F629",
+              "0x1F62A",
+              "0x1F62B",
+              "0x1F62C",
+              "0x1F62D",
+              "0x1F62E",
+              "0x1F62F",
+              "0x1F630",
+              "0x1F631",
+              "0x1F632",
+              "0x1F633",
+              "0x1F634",
+              "0x1F635",
+              "0x1F636",
+              "0x1F637",
+              "0x1F638",
+              "0x1F639",
+              "0x1F44B",
+              "0x1F44C",
+              "0x1F44D",
+              "0x1F64F",
+            ],
+            emojilist: [],
+            upfile: "",
+            srcList: [],
+            canmsg: "",
+            rule: "",
+            form1: {
+              accountcode: "",
+              password: "",
+              question: "",
+            },
+            dialogImageUrl: "",
+            dialogVisible: false,
           };
-          if (sopic) { // 客服頭像
-            da['photo'] = sopic;
-          }
-          da['image'] = this.checkImg(data.msg); // 是否是圖片
-          if (this.checkImg(data.msg)) {
-            this.srcList.push(data.msg);
-          }
-          this.msglist.push(da);
-          this.scrollToBottom();
-        } else {
-          da = {
-            style: msgstyle
-          }
-          this.msglist.push(da);
-          this.scrollToBottom();
-          this.rule = data.msg;
-        }
-      },
-      // 分割cookie
-      getcookie() {
-        var arycookie = new Array();
-        var array = document.cookie.split("; "); // 分割cookie
-        var res = {}
-        array.forEach((id) => {
-          let change = id.split("=");
-          res[change[0]] = change[1];
-        });
-        return res;
-      },
-      // 沒有帳號客戶進入客服聊天室
-      noReg() {
-        if (this.form1.question == '') {
-          alert(this.lang.pleaseselectquestion)
-        } else if (this.form1.question != '') {
-          this.connect(this.form1.question);
-          this.dis = true;
-        }
-      },
-      // 設定cookie
-      setCookie(cookiename, value) {
-        var d = new Date();
-        d.setTime(d.getTime() + (1000 * 24 * 60 * 60 * 1000));
-        var expires = "expires=" + d.toUTCString();
-        document.cookie = cookiename + "=" + value + ";" + expires + ";path=/;SameSite=Strict";
-      },
-      // 正式連線
-      connect(qa) {
-        var _this = this;
-        var currenttime = new Date().getTime();
-        var array = new Array();
-        var cookie = document.cookie;
-        var detial = {
-          width: this.width,
-          height: this.height,
-        }
-        detial['os'] = this.getos();
-        detial['browser'] = this.getbrowser();
-        detial['device'] = this.getmob();
-        detial['qa'] = qa;
-        if (cookie.length != 0) {
-          var arycookie = this.getcookie();
-          if (typeof arycookie.token != 'undefined' && this.msg_name != '') {
-            this.getUserIP().then(function(value) {
-              detial['ip'] = value;
-              _this.socket.emit('orderroom', _this.uuid, _this.msg_name, detial, currenttime, _this.turnlang);
-            });
-          } else if (typeof arycookie.socketRoom_noacc !== 'undefined' && typeof arycookie.msg_name !== 'undefined' && typeof arycookie.token  === 'undefined') {
-            this.msg_name = arycookie.msg_name
-            this.uuid = arycookie.socketRoom_noacc
-            this.getUserIP().then(function(value) {
-              detial['ip'] = value;
-              _this.socket.emit('orderroom', _this.uuid, _this.msg_name, detial, currenttime, _this.turnlang);
-            });
-          } else {
-            this.msg_name = 'new-' + currenttime
-            this.setCookie('msg_name', this.msg_name)
-            this.setCookie('socketRoom_noacc', this.uuid)
-            this.getUserIP().then(function(value) {
-              detial['ip'] = value;
-              _this.socket.emit('orderroom', _this.uuid, _this.msg_name, detial, currenttime, _this.turnlang);
-            });
-          }
-        } else {
-          this.msg_name = 'new-' + currenttime
-          this.setCookie('msg_name', this.msg_name)
-          this.setCookie('socketRoom_noacc', this.uuid)
-          this.getUserIP().then(function(value) {
-            detial['ip'] = value;
-            _this.socket.emit('orderroom', _this.uuid, _this.msg_name, detial, currenttime, _this.turnlang);
-          });
-        }
-      },
-      // 取的作業系統
-      getos() {
-        var os = navigator.platform;
-        var userAgent = navigator.userAgent;
-        var info = "";
-        if (os.indexOf("Win") > -1) {
-          if (userAgent.indexOf("Windows NT 5.0") > -1) {
-            info += "Win2000";
-          } else if (userAgent.indexOf("Windows NT 5.1") > -1) {
-            info += "WinXP";
-          } else if (userAgent.indexOf("Windows NT 5.2") > -1) {
-            info += "Win2003";
-          } else if (userAgent.indexOf("Windows NT 6.0") > -1) {
-            info += "WindowsVista";
-          } else if (userAgent.indexOf("Windows NT 6.1") > -1 || userAgent.indexOf("Windows 7") > -1) {
-            info += "Win7";
-          } else if (userAgent.indexOf("Windows NT 6.2") > -1 || userAgent.indexOf("Windows 8") > -1) {
-            info += "Win8";
-          } else if (userAgent.indexOf("Windows NT 6.3") > -1 || userAgent.indexOf("Windows 8.1") > -1) {
-            info += "Win8.1";
-          } else if (userAgent.indexOf("Windows NT 10.0") > -1 || userAgent.indexOf("Windows 10") > -1) {
-            info += "Win10";
-          } else {
-            info += "Other";
-          }
-        } else if (os.indexOf("Mac") > -1) {
-          info += "Mac";
-        } else if (os.indexOf("X11") > -1) {
-          info += "Unix";
-        } else if (os.indexOf("Linux") > -1) {
-          info += "Linux";
-        } else {
-          info += "Other";
-        }
-        return info;
-      },
-      // 取得裝置
-      getmob() {
-        var userAgent = navigator.userAgent;
-        var info = '';
-        if (userAgent.match(/Android/i)) {
-          info = 'Android';
-        } else if (userAgent.match(/webOS/i)) {
-          info = 'webOS';
-        } else if (userAgent.match(/iPhone/i)) {
-          info = 'iPhone';
-        } else if (userAgent.match(/iPad/i)) {
-          info = 'iPad';
-        } else if (userAgent.match(/iPod/i)) {
-          info = 'iPod';
-        } else if (userAgent.match(/BlackBerry/i)) {
-          info = 'BlackBerry';
-        } else if (userAgent.match(/Windows Phone/i)) {
-          info = 'Windows Phone';
-        } else {
-          info = '電腦';
-        }
-        if (info != '電腦') {
-          info += ' (手機) ';
-        }
-        return info;
-      },
-      //取得瀏覽器
-      getbrowser() {
-        var explorer = navigator.userAgent;
-        if (explorer.indexOf("MSIE") >= 0) { //ie
-          return "ie";
-        } else if (explorer.indexOf("Firefox") >= 0) { //firefox
-          return "Firefox";
-        } else if (explorer.indexOf("Chrome") >= 0) { //Chrome
-          return "Chrome";
-        } else if (explorer.indexOf("Opera") >= 0) { //Opera
-          return "Opera";
-        } else if (explorer.indexOf("Safari") >= 0) { //Safari
-          return "Safari";
-        } else if (explorer.indexOf("Netscape") >= 0) { //Netscape
-          return 'Netscape';
-        }
-      },
-      // 取得ip
-      getUserIP() { // 外網ip
-        return fetch('https://ipinfo.io/json')
-          .then(function(response) {
-            return response.json();
-          })
-          .then(function(myJson) {
-            return myJson.ip;
-          })
-      },
-      // 換行
-      lineFeed() {
-        if (this.form.msg != '' && this.form.msg != '\n') {
-          this.form.msg = this.form.msg + '\n';
-        }
-      },
-      // 傳送訊息
-      publish() {
-        if (this.form.msg != '' && this.form.msg != '\n' || this.upfile != '') {
-          var currenttime = this.getDate('');
-          var nowtime = currenttime.split(' ');
+        },
+        created() {
+          window.addEventListener("beforeunload", (e) =>
+            this.beforeunloadFn(e)
+          );
+        },
+        mounted() {
           var _this = this;
-          if (this.upfile != '') {
-            this.socket.emit('publish', this.uuid, this.msg_name, this.upfile, '', nowtime[1]);
-            this.socket.emit('insertcontent', this.uuid, this.id, null, this.upfile, currenttime, this.msg_name);
+          this.setemojis();
+          this.socket = io("http://vip66741.com");
+          var ary = this.getcookie();
+          if (ary.hasOwnProperty("lang")) {
+            this.handleEdit(ary.lang);
           }
-          if (this.form.msg != '' && this.form.msg != '\n') {
-            this.socket.emit('publish', this.uuid, this.msg_name, this.form.msg, '', nowtime[1]); //傳送資料給server
-            this.form.msg = this.getformmsgemoji();
-            this.socket.emit('insertcontent', this.uuid, this.id, null, this.form.msg, currenttime, this.msg_name);
-          }
-        }
-        this.upfile = '';
-        this.form.msg = '';
-        this.$refs.upload.clearFiles();
-        //將textarea字高度還原
-        document.getElementsByTagName("textarea")[0].style.height = ""
-        document.getElementsByClassName("chat_info")[0].style.height = ""
-      },
-      //textarea判斷高度
-      textarealink() {
-        _this = this
-        setTimeout(() => {
-          var el = document.getElementsByTagName("textarea")[0];
-          if (typeof el != 'undefined') {
-            var elTop = document.getElementsByClassName("chat_info")[0];
-            el.addEventListener('keydown', function(e) {
-              if (e.keyCode == 13 && !e.shiftKey) {
-                // 下面写你的发送消息的代码
-                e.preventDefault();
+          var siv = setInterval(function () {
+            if (_this.socket.connected == false) {
+              alert(_this.lang.disconnect);
+              clearInterval(siv);
+            }
+          }, 5000);
+          this.width = window.innerWidth;
+          this.height = window.innerHeight;
+          this.setCookie("SameSite", "Strict"); // chrome 需要設置cookie設定
+          var cookie = document.cookie;
+          // 顯示room有多少人
+          this.socket.on("online", function (amount) {
+            _this.online = amount;
+          });
+          // 訊息進來，顯示在畫面上
+          this.socket.on("msgReceived", function (
+            name,
+            data,
+            channel,
+            sopic,
+            time
+          ) {
+            console.log(name, data, channel);
+            _this.addMsg(name, data, channel, sopic, time);
+          });
+          // 訂閱room
+          this.socket.on("getUUID", function (data) {
+            console.log(data);
+            _this.uuid = data;
+            let cookie = document.cookie;
+            if (cookie.length != 0) {
+              let arycookie = _this.getcookie();
+              _this.socket.emit("getId", arycookie, _this.uuid);
+            }
+          });
+          // 取得accountid
+          this.socket.on("setId", function (data) {
+            _this.id = data;
+          });
+          // 取得accountcode
+          this.socket.on("setaccountcode", function (accode) {
+            _this.accountcode = accode;
+            _this.msg_name = accode;
+          });
+          // 取得roomid
+          this.socket.on("setCookie", function (data) {
+            _this.uuid = data;
+            _this.setCookie("socketRoom", data);
+          });
+          // kicked
+          this.socket.on("kicked", function () {
+            _this.socket.disconnect();
+            _this.msglist.push({
+              msg: _this.lang.disconnect,
+              style: "center",
+              fontstyle: "fontcenter",
+            });
+          });
+          // 雙開
+          this.socket.on("userdouble", function () {
+            _this.socket.disconnect();
+            _this.msglist.push({
+              msg: _this.lang.userdouble,
+              style: "center",
+              fontstyle: "fontcenter",
+            });
+          });
+        },
+        methods: {
+          handleEdit(command) {
+            if (this.turnlang != command) {
+              switch (command) {
+                case "chn":
+                  this.lang = this.chn;
+                  break;
+                case "eng":
+                  this.lang = this.eng;
+                  break;
+                case "vnm":
+                  this.lang = this.vnm;
+                  break;
+                case "thai":
+                  this.lang = this.thai;
+                  break;
               }
-            })
-            el.addEventListener('input', function() {
-              var len = this.value; //调用函数
-              if (len.match(/\n/g)) {
-                this.length = len.match(/\n/g).length + 1
-                el.style.height = this.length * 1.5 + "em"
-                elTop.style.height = 'calc(100vh - ' + this.length * 1.5 + 'rem - ' + ' 301px)'
-                //自動下滾到訊息最底
-                _this.$nextTick(() => {
-                  if (typeof _this.$refs.chatContent != 'undefined') {
-                    _this.$refs.chatContent.scrollTop = _this.$refs.chatContent.scrollHeight + 50;
-                  }
+              this.turnlang = command;
+              this.setCookie("lang", this.turnlang);
+              this.socket.emit("getcanmsg", this.uuid, this.turnlang);
+            }
+          },
+          handlePictureCardPreview(file) {
+            this.dialogImageUrl = file.url;
+            this.dialogVisible = true;
+          },
+          beforeunloadFn(e) {
+            if (this.socket != "") {
+              this.socket.disconnect();
+              var exp = new Date();
+              exp.setTime(exp.getTime() - 1);
+              document.cookie =
+                "token= ;expires=" + exp.toGMTString() + " ;path=/";
+            }
+          },
+          getemoji(str) {
+            var index = str.indexOf("0x1");
+            var final = "";
+            var third = "";
+            if (index != -1) {
+              do {
+                let first = "";
+                let test = "";
+                first = str.substr(0, index);
+                test = str.substr(index, 7);
+                third = str.substr(index + 7);
+                if (typeof test != "NaN") {
+                  final += first + String.fromCodePoint(test); //+ third;
+                }
+                str = third;
+                index = str.indexOf("0x1");
+              } while (index != -1);
+              final += third;
+            } else {
+              final = str;
+            }
+            return final;
+          },
+          // 判斷圖片
+          checkImg(data) {
+            let array = data.split(",", 2);
+            var string = "";
+            if (array[0].indexOf("data:image/") == -1) {
+              return false;
+            }
+            try {
+              string = btoa(atob(array[1]));
+            } catch (e) {
+              return false;
+            }
+            if (string == array[1]) {
+              return true;
+            }
+            return false;
+          },
+          // 新增訊息
+          addMsg(name, data, channel, sopic, time) {
+            var msgstyle = "";
+            var da = "";
+            if (name == this.msg_name) {
+              // 使用者訊息
+              msgstyle = "right";
+            } else if (name == "System") {
+              // 系統訊息
+              msgstyle = "center";
+              if (data.msg.indexOf("加入") != -1) {
+                str = data.msg.split(" ");
+                data.msg = str[0] + " " + this.lang.enter;
+              }
+              if (data.msg.indexOf("離開") != -1) {
+                str = data.msg.split(" ");
+                data.msg = str[0] + " " + this.lang.leave;
+              }
+              if (data.msg.indexOf("客服") != -1) {
+                data.msg = this.lang.busy;
+              }
+            } else if (name == "Canmsg") {
+              // 罐頭訊息
+              msgstyle = "Canmsg";
+            } else {
+              // 客服訊息
+              msgstyle = "left";
+            }
+            if (name != "Canmsg") {
+              if (
+                data.msg.indexOf("0x1") != -1 &&
+                this.checkImg(data.msg) == false
+              ) {
+                data.msg = this.getemoji(data.msg);
+              }
+              da = {
+                curtime: time, // 訊息的時間
+                name: name, // 名稱
+                msg: data.msg, // 訊息內容
+                style: msgstyle, // 至左還是至右
+                fontstyle: "font" + msgstyle, // 訊息的style
+              };
+              if (sopic) {
+                // 客服頭像
+                da["photo"] = sopic;
+              }
+              da["image"] = this.checkImg(data.msg); // 是否是圖片
+              if (this.checkImg(data.msg)) {
+                this.srcList.push(data.msg);
+              }
+              this.msglist.push(da);
+              this.scrollToBottom();
+            } else {
+              da = {
+                style: msgstyle,
+              };
+              this.msglist.push(da);
+              this.scrollToBottom();
+              this.rule = data.msg;
+            }
+          },
+          // 分割cookie
+          getcookie() {
+            var arycookie = new Array();
+            var array = document.cookie.split("; "); // 分割cookie
+            var res = {};
+            array.forEach((id) => {
+              let change = id.split("=");
+              res[change[0]] = change[1];
+            });
+            return res;
+          },
+          // 沒有帳號客戶進入客服聊天室
+          noReg() {
+            if (this.form1.question == "") {
+              alert(this.lang.pleaseselectquestion);
+            } else if (this.form1.question != "") {
+              this.connect(this.form1.question);
+              this.dis = true;
+            }
+          },
+          // 設定cookie
+          setCookie(cookiename, value) {
+            var d = new Date();
+            d.setTime(d.getTime() + 1000 * 24 * 60 * 60 * 1000);
+            var expires = "expires=" + d.toUTCString();
+            document.cookie =
+              cookiename +
+              "=" +
+              value +
+              ";" +
+              expires +
+              ";path=/;SameSite=Strict";
+          },
+          // 正式連線
+          connect(qa) {
+            var _this = this;
+            var currenttime = new Date().getTime();
+            var array = new Array();
+            var cookie = document.cookie;
+            var detial = {
+              width: this.width,
+              height: this.height,
+            };
+            detial["os"] = this.getos();
+            detial["browser"] = this.getbrowser();
+            detial["device"] = this.getmob();
+            detial["qa"] = qa;
+            if (cookie.length != 0) {
+              var arycookie = this.getcookie();
+              if (
+                typeof arycookie.token != "undefined" &&
+                this.msg_name != ""
+              ) {
+                this.getUserIP().then(function (value) {
+                  detial["ip"] = value;
+                  _this.socket.emit(
+                    "orderroom",
+                    _this.uuid,
+                    _this.msg_name,
+                    detial,
+                    currenttime,
+                    _this.turnlang
+                  );
+                });
+              } else if (
+                typeof arycookie.socketRoom_noacc !== "undefined" &&
+                typeof arycookie.msg_name !== "undefined" &&
+                typeof arycookie.token === "undefined"
+              ) {
+                this.msg_name = arycookie.msg_name;
+                this.uuid = arycookie.socketRoom_noacc;
+                this.getUserIP().then(function (value) {
+                  detial["ip"] = value;
+                  _this.socket.emit(
+                    "orderroom",
+                    _this.uuid,
+                    _this.msg_name,
+                    detial,
+                    currenttime,
+                    _this.turnlang
+                  );
                 });
               } else {
-                el.style.height = ""
-                elTop.style.height = ""
+                this.msg_name = "new-" + currenttime;
+                this.setCookie("msg_name", this.msg_name);
+                this.setCookie("socketRoom_noacc", this.uuid);
+                this.getUserIP().then(function (value) {
+                  detial["ip"] = value;
+                  _this.socket.emit(
+                    "orderroom",
+                    _this.uuid,
+                    _this.msg_name,
+                    detial,
+                    currenttime,
+                    _this.turnlang
+                  );
+                });
+              }
+            } else {
+              this.msg_name = "new-" + currenttime;
+              this.setCookie("msg_name", this.msg_name);
+              this.setCookie("socketRoom_noacc", this.uuid);
+              this.getUserIP().then(function (value) {
+                detial["ip"] = value;
+                _this.socket.emit(
+                  "orderroom",
+                  _this.uuid,
+                  _this.msg_name,
+                  detial,
+                  currenttime,
+                  _this.turnlang
+                );
+              });
+            }
+          },
+          // 取的作業系統
+          getos() {
+            var os = navigator.platform;
+            var userAgent = navigator.userAgent;
+            var info = "";
+            if (os.indexOf("Win") > -1) {
+              if (userAgent.indexOf("Windows NT 5.0") > -1) {
+                info += "Win2000";
+              } else if (userAgent.indexOf("Windows NT 5.1") > -1) {
+                info += "WinXP";
+              } else if (userAgent.indexOf("Windows NT 5.2") > -1) {
+                info += "Win2003";
+              } else if (userAgent.indexOf("Windows NT 6.0") > -1) {
+                info += "WindowsVista";
+              } else if (
+                userAgent.indexOf("Windows NT 6.1") > -1 ||
+                userAgent.indexOf("Windows 7") > -1
+              ) {
+                info += "Win7";
+              } else if (
+                userAgent.indexOf("Windows NT 6.2") > -1 ||
+                userAgent.indexOf("Windows 8") > -1
+              ) {
+                info += "Win8";
+              } else if (
+                userAgent.indexOf("Windows NT 6.3") > -1 ||
+                userAgent.indexOf("Windows 8.1") > -1
+              ) {
+                info += "Win8.1";
+              } else if (
+                userAgent.indexOf("Windows NT 10.0") > -1 ||
+                userAgent.indexOf("Windows 10") > -1
+              ) {
+                info += "Win10";
+              } else {
+                info += "Other";
+              }
+            } else if (os.indexOf("Mac") > -1) {
+              info += "Mac";
+            } else if (os.indexOf("X11") > -1) {
+              info += "Unix";
+            } else if (os.indexOf("Linux") > -1) {
+              info += "Linux";
+            } else {
+              info += "Other";
+            }
+            return info;
+          },
+          // 取得裝置
+          getmob() {
+            var userAgent = navigator.userAgent;
+            var info = "";
+            if (userAgent.match(/Android/i)) {
+              info = "Android";
+            } else if (userAgent.match(/webOS/i)) {
+              info = "webOS";
+            } else if (userAgent.match(/iPhone/i)) {
+              info = "iPhone";
+            } else if (userAgent.match(/iPad/i)) {
+              info = "iPad";
+            } else if (userAgent.match(/iPod/i)) {
+              info = "iPod";
+            } else if (userAgent.match(/BlackBerry/i)) {
+              info = "BlackBerry";
+            } else if (userAgent.match(/Windows Phone/i)) {
+              info = "Windows Phone";
+            } else {
+              info = "電腦";
+            }
+            if (info != "電腦") {
+              info += " (手機) ";
+            }
+            return info;
+          },
+          //取得瀏覽器
+          getbrowser() {
+            var explorer = navigator.userAgent;
+            if (explorer.indexOf("MSIE") >= 0) {
+              //ie
+              return "ie";
+            } else if (explorer.indexOf("Firefox") >= 0) {
+              //firefox
+              return "Firefox";
+            } else if (explorer.indexOf("Chrome") >= 0) {
+              //Chrome
+              return "Chrome";
+            } else if (explorer.indexOf("Opera") >= 0) {
+              //Opera
+              return "Opera";
+            } else if (explorer.indexOf("Safari") >= 0) {
+              //Safari
+              return "Safari";
+            } else if (explorer.indexOf("Netscape") >= 0) {
+              //Netscape
+              return "Netscape";
+            }
+          },
+          // 取得ip
+          getUserIP() {
+            // 外網ip
+            return fetch("https://ipinfo.io/json")
+              .then(function (response) {
+                return response.json();
+              })
+              .then(function (myJson) {
+                return myJson.ip;
+              });
+          },
+          // 換行
+          lineFeed() {
+            if (this.form.msg != "" && this.form.msg != "\n") {
+              this.form.msg = this.form.msg + "\n";
+            }
+          },
+          // 傳送訊息
+          publish() {
+            if (
+              (this.form.msg != "" && this.form.msg != "\n") ||
+              this.upfile != ""
+            ) {
+              var currenttime = this.getDate("");
+              var nowtime = currenttime.split(" ");
+              var _this = this;
+              if (this.upfile != "") {
+                this.socket.emit(
+                  "publish",
+                  this.uuid,
+                  this.msg_name,
+                  this.upfile,
+                  "",
+                  nowtime[1]
+                );
+                this.socket.emit(
+                  "insertcontent",
+                  this.uuid,
+                  this.id,
+                  null,
+                  this.upfile,
+                  currenttime,
+                  this.msg_name
+                );
+              }
+              if (this.form.msg != "" && this.form.msg != "\n") {
+                this.socket.emit(
+                  "publish",
+                  this.uuid,
+                  this.msg_name,
+                  this.form.msg,
+                  "",
+                  nowtime[1]
+                ); //傳送資料給server
+                this.form.msg = this.getformmsgemoji();
+                this.socket.emit(
+                  "insertcontent",
+                  this.uuid,
+                  this.id,
+                  null,
+                  this.form.msg,
+                  currenttime,
+                  this.msg_name
+                );
+              }
+            }
+            this.upfile = "";
+            this.form.msg = "";
+            this.$refs.upload.clearFiles();
+            //將textarea字高度還原
+            document.getElementsByTagName("textarea")[0].style.height = "";
+            document.getElementsByClassName("chat_info")[0].style.height = "";
+          },
+          //textarea判斷高度
+          textarealink() {
+            _this = this;
+            setTimeout(() => {
+              var el = document.getElementsByTagName("textarea")[0];
+              if (typeof el != "undefined") {
+                var elTop = document.getElementsByClassName("chat_info")[0];
+                el.addEventListener("keydown", function (e) {
+                  if (e.keyCode == 13 && !e.shiftKey) {
+                    // 下面写你的发送消息的代码
+                    e.preventDefault();
+                  }
+                });
+                el.addEventListener("input", function () {
+                  var len = this.value; //调用函数
+                  if (len.match(/\n/g)) {
+                    this.length = len.match(/\n/g).length + 1;
+                    el.style.height = this.length * 1.5 + "em";
+                    elTop.style.height =
+                      "calc(100vh - " +
+                      this.length * 1.5 +
+                      "rem - " +
+                      " 301px)";
+                    //自動下滾到訊息最底
+                    _this.$nextTick(() => {
+                      if (typeof _this.$refs.chatContent != "undefined") {
+                        _this.$refs.chatContent.scrollTop =
+                          _this.$refs.chatContent.scrollHeight + 50;
+                      }
+                    });
+                  } else {
+                    el.style.height = "";
+                    elTop.style.height = "";
+                  }
+                });
+              }
+            }, 500);
+          },
+          // 取的日期時間 (YYYY/MM/DD HH:mm:ss)
+          getDate(indate) {
+            var date = "";
+            if (indate == "") {
+              date = new Date();
+            } else {
+              date = new Date(indate);
+            }
+            var month, day, hour, min;
+            if (date.getMonth() / 10 < 1) {
+              month = date.getMonth() + 1;
+              month = "0" + month;
+            } else {
+              month = date.getMonth();
+            }
+            if (date.getDate() / 10 < 1) {
+              day = "0" + date.getDate();
+            } else {
+              day = date.getDate();
+            }
+            if (date.getHours() / 10 < 1) {
+              hour = "0" + date.getHours();
+            } else {
+              hour = date.getHours();
+            }
+            if (date.getMinutes() / 10 < 1) {
+              min = "0" + date.getMinutes();
+            } else {
+              min = date.getMinutes();
+            }
+            var date =
+              date.getYear() +
+              1900 +
+              "/" +
+              month +
+              "/" +
+              day +
+              " " +
+              hour +
+              ":" +
+              min;
+            return date;
+          },
+          // 處理字串中的emoji
+          getformmsgemoji() {
+            var index = this.form.msg.search(
+              /\ud83c[\udf00-\udfff]|\ud83d[\udc00-\ude4f]|\ud83d[\ude80-\udeff]/g
+            );
+            var str = this.form.msg;
+            var final = "";
+            var third = "";
+            if (index != -1) {
+              // 判斷輸入的字串中的emoji,並將emoji轉成16進制
+              do {
+                let first = "";
+                let test = "";
+                first = str.substr(0, index);
+                test = str.substr(index, 2);
+                third = str.substr(index + 2);
+                final += first + "0x" + this.emojiUnicode(test);
+                str = third;
+                index = str.search(
+                  /\ud83c[\udf00-\udfff]|\ud83d[\udc00-\ude4f]|\ud83d[\ude80-\udeff]/g
+                );
+              } while (index != -1);
+              final += third;
+            } else {
+              final = this.form.msg;
+            }
+            return final;
+          },
+          // 點擊emoji事件
+          emojiclick(data) {
+            this.form.msg += data;
+          },
+          // 產生emoji列表
+          setemojis() {
+            for (let x in this.emojis) {
+              let str = String.fromCodePoint(this.emojis[x]);
+              this.emojilist.push(str);
+            }
+          },
+          // 取得上传的圖片
+          getFile(file) {
+            let maxsize = 1024 * 400; // 300KB
+            if (file.size > maxsize) {
+              this.$message({
+                message: this.lang.imagesize,
+                type: "warning",
+              });
+              this.$refs.upload.clearFiles();
+            } else {
+              this.getBase64(file.raw).then((res) => {
+                this.upfile = res;
+                this.publish();
+              });
+            }
+          },
+          // 圖片轉base64
+          getBase64(file) {
+            return new Promise(function (resolve, reject) {
+              let reader = new FileReader();
+              let imgResult = "";
+              reader.readAsDataURL(file);
+              reader.onload = function () {
+                imgResult = reader.result; // data:image/jpeg;base64,
+              };
+              reader.onerror = function (error) {
+                reject(error);
+              };
+              reader.onloadend = function () {
+                resolve(imgResult);
+              };
+            });
+          },
+          // 自動下滾到訊息最底
+          scrollToBottom() {
+            this.$nextTick(() => {
+              if (typeof this.$refs.chatContent != "undefined") {
+                this.$refs.chatContent.scrollTop =
+                  this.$refs.chatContent.scrollHeight + 10;
               }
             });
-          }
-        }, 500)
-      },
-      // 取的日期時間 (YYYY/MM/DD HH:mm:ss)
-      getDate(indate) {
-        var date = '';
-        if (indate == '') {
-          date = new Date();
-        } else {
-          date = new Date(indate);
-        }
-        var month, day, hour, min;
-        if ((date.getMonth() / 10) < 1) {
-          month = date.getMonth() + 1;
-          month = '0' + month;
-        } else {
-          month = date.getMonth();
-        }
-        if ((date.getDate() / 10) < 1) {
-          day = '0' + date.getDate();
-        } else {
-          day = date.getDate();
-        }
-        if ((date.getHours() / 10) < 1) {
-          hour = '0' + date.getHours();
-        } else {
-          hour = date.getHours();
-        }
-        if ((date.getMinutes() / 10) < 1) {
-          min = '0' + date.getMinutes();
-        } else {
-          min = date.getMinutes();
-        }
-        var date = date.getYear() + 1900 + '/' + month + '/' + day + ' ' + hour + ':' + min;
-        return date;
-      },
-      // 處理字串中的emoji
-      getformmsgemoji() {
-        var index = this.form.msg.search(/\ud83c[\udf00-\udfff]|\ud83d[\udc00-\ude4f]|\ud83d[\ude80-\udeff]/g);
-        var str = this.form.msg;
-        var final = '';
-        var third = '';
-        if (index != -1) {
-          // 判斷輸入的字串中的emoji,並將emoji轉成16進制
-          do {
-            let first = '';
-            let test = '';
-            first = str.substr(0, index);
-            test = str.substr(index, 2);
-            third = str.substr(index + 2);
-            final += first + '0x' + this.emojiUnicode(test);
-            str = third;
-            index = str.search(/\ud83c[\udf00-\udfff]|\ud83d[\udc00-\ude4f]|\ud83d[\ude80-\udeff]/g);
-          } while (index != -1);
-          final += third;
-        } else {
-          final = this.form.msg;
-        }
-        return final;
-      },
-      // 點擊emoji事件
-      emojiclick(data) {
-        this.form.msg += data;
-      },
-      // 產生emoji列表
-      setemojis() {
-        for (let x in this.emojis) {
-          let str = String.fromCodePoint(this.emojis[x]);
-          this.emojilist.push(str);
-        }
-      },
-      // 取得上传的圖片
-      getFile(file) {
-        let maxsize = 1024 * 400; // 300KB
-        if (file.size > maxsize) {
-          this.$message({
-            message: this.lang.imagesize,
-            type: 'warning'
-          });
-          this.$refs.upload.clearFiles();
-        } else {
-          this.getBase64(file.raw).then(res => {
-            this.upfile = res;
-            this.publish()
-          });
-        }
-      },
-      // 圖片轉base64
-      getBase64(file) {
-        return new Promise(function(resolve, reject) {
-          let reader = new FileReader();
-          let imgResult = "";
-          reader.readAsDataURL(file);
-          reader.onload = function() {
-            imgResult = reader.result; // data:image/jpeg;base64,
-          };
-          reader.onerror = function(error) {
-            reject(error);
-          };
-          reader.onloadend = function() {
-            resolve(imgResult);
-          };
-        });
-      },
-      // 自動下滾到訊息最底
-      scrollToBottom() {
-        this.$nextTick(() => {
-          if (typeof this.$refs.chatContent != 'undefined') {
-            this.$refs.chatContent.scrollTop = this.$refs.chatContent.scrollHeight + 10;
-          }
-        });
-      },
-      // emoji文字轉成16近制
-      emojiUnicode(emoji) {
-        var comp;
-        if (emoji.length === 1) {
-          comp = emoji.charCodeAt(0);
-        }
-        comp = (
-          (emoji.charCodeAt(0) - 0xD800) * 0x400 + (emoji.charCodeAt(1) - 0xDC00) + 0x10000
-        );
-        if (comp < 0) {
-          comp = emoji.charCodeAt(0);
-        }
-        return comp.toString("16");
-      }
-    }
-  });
-  </script>
-</body>
-
+          },
+          // emoji文字轉成16近制
+          emojiUnicode(emoji) {
+            var comp;
+            if (emoji.length === 1) {
+              comp = emoji.charCodeAt(0);
+            }
+            comp =
+              (emoji.charCodeAt(0) - 0xd800) * 0x400 +
+              (emoji.charCodeAt(1) - 0xdc00) +
+              0x10000;
+            if (comp < 0) {
+              comp = emoji.charCodeAt(0);
+            }
+            return comp.toString("16");
+          },
+        },
+      });
+    </script>
+  </body>
 </html>

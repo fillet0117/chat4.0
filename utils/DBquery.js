@@ -1,5 +1,5 @@
 const mysql = require("mysql");
-const dbsetting = require("../config/dbsetting.js");
+const { dbsetting } = require("../config/dbsetting.js");
 const db_config = dbsetting;
 
 // 創建mysql連線池
