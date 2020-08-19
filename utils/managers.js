@@ -17,7 +17,12 @@ function managerJoin(id, name, accid, rooms, status, accountcode) {
 
 // 取得現在客戶的資料
 function getCurrentManager(id) {
-  return managers.find((manager) => manager.id === id);
+  let manager = managers.find((manager) => manager.id === id);
+  if (manager === undefined) {
+    return false;
+  } else {
+    return manager;
+  }
 }
 
 // 客戶離開
@@ -95,7 +100,7 @@ function countOnlineManager() {
 
 // 取得閒置的manager
 function getNoBusyManager() {
-  let index = managers.findIndex((manager) => rooms.length === 0);
+  let index = managers.findIndex((manager) => manager.rooms.length === 0);
   if (index !== -1) {
     return managers[index];
   } else {

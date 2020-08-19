@@ -19,7 +19,12 @@ function clientJoin(id, name, room, detial, linktime, lang, status) {
 
 // 取得現在客戶的資料
 function getCurrentClient(id) {
-  return clients.find((client) => client.id === id);
+  let client = clients.find((client) => client.id === id);
+  if (client === undefined) {
+    return false;
+  } else {
+    return client;
+  }
 }
 
 // 客戶離開
@@ -56,9 +61,10 @@ function clientExist(id) {
 // 修改status
 function clientEditStatus(id, status) {
   const index = clients.findIndex((client) => client.id === id);
+  console.log(index);
   if (index !== -1) {
     clients[index].status = status;
-    return client[index];
+    return clients[index];
   }
 }
 

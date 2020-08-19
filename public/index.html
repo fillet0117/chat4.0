@@ -1249,7 +1249,7 @@
               this.form.msg = this.form.msg + "\n";
             }
           },
-          // 傳送訊息
+          // 傳送訊息 roomid, msg, pic, time
           publish() {
             if (
               (this.form.msg != "" && this.form.msg != "\n") ||
@@ -1262,26 +1262,22 @@
                 this.socket.emit(
                   "publish",
                   this.uuid,
-                  this.msg_name,
                   this.upfile,
                   "",
                   nowtime[1]
                 );
+                // roomid, content, date
                 this.socket.emit(
                   "insertcontent",
                   this.uuid,
-                  this.id,
-                  null,
                   this.upfile,
-                  currenttime,
-                  this.msg_name
+                  currenttime
                 );
               }
               if (this.form.msg != "" && this.form.msg != "\n") {
                 this.socket.emit(
                   "publish",
                   this.uuid,
-                  this.msg_name,
                   this.form.msg,
                   "",
                   nowtime[1]
@@ -1290,11 +1286,8 @@
                 this.socket.emit(
                   "insertcontent",
                   this.uuid,
-                  this.id,
-                  null,
                   this.form.msg,
-                  currenttime,
-                  this.msg_name
+                  currenttime
                 );
               }
             }

@@ -27,6 +27,7 @@ const {
   getAllClient,
   clientExist,
   clientEditStatus,
+  getNoServiceClient,
   clientEditArea,
 } = require("./utils/clients");
 const {
@@ -85,15 +86,12 @@ io.on("connection", (socket) => {
     var manager = getCurrentManager(socket.id);
     var name = "";
     if (user !== false) {
-      io.sockets.in("csroom").emit("setwaittime", roomid);
+      io.sockets.in("csroom").emit("reloadtime", roomid);
       name = user.name;
     } else if (manager !== false) {
-      io.sockets.in("csroom").emit("reloadtime", roomid);
+      io.sockets.in("csroom").emit("setwaittime", roomid);
       name = manager.name;
     }
-    // publish(roomid, msgname, msg, pic, time);
-    console.log(name);
-    console.log(roomid);
     io.sockets
       .in(roomid)
       .emit("msgReceived", name, { msg: msg }, roomid, pic, time);
@@ -141,6 +139,10 @@ io.on("connection", (socket) => {
         });
       });
     }
+    setTimeout(() => {
+      console.log("--------getId-------");
+      getall();
+    }, 200);
   });
 
   // 訊息存入db // 改動-> 傳的參數原本有roomid, uid, mid, content, date, name = null
@@ -163,14 +165,14 @@ io.on("connection", (socket) => {
   });
 
   // 客服連線
-  socket.on("getbusy", (status, mid) => {
+  socket.on("getbusy", (status, token) => {
     socket.join("csroom");
     var nickname = "";
     var accountcode = "";
     var managers = {};
     var users = {};
-    if ("token" in mid) {
-      let mid = jwtDecode(mid.token).aud;
+    if ("chattoken" in token) {
+      let mid = jwtDecode(token.chattoken).aud;
       let sql = `select name, accountcode, photo from m_manager where managerid = ${mid}`;
       socket.emit("getMid", mid);
       // 判斷是否雙開
@@ -179,7 +181,7 @@ io.on("connection", (socket) => {
           socket.emit("double", "yes");
         } else {
           socket.emit("double", "no");
-          socket.disconnect();
+          // socket.disconnect();
           return;
         }
       });
@@ -234,13 +236,19 @@ io.on("connection", (socket) => {
         });
       }
       setTimeout(() => {
-        getNoservice(socket, status, nickname);
+        if (status === "auto") {
+          getNoservice(socket, status);
+        }
       }, 200);
       io.sockets.in("csroom").emit("user_online", users.length);
       redis.hmset(`double:${mid}`, { mid: mid });
     } else {
       socket.disconnect();
     }
+    setTimeout(() => {
+      console.log("--------getbusy-------");
+      getall();
+    }, 200);
   });
 
   // cs點按鈕進入room // 修改參數 roomid, name, status
@@ -251,7 +259,12 @@ io.on("connection", (socket) => {
       user = user[0];
       io.sockets
         .in(user.room)
-        .emit("msgReceived", "System", { msg: `${name} 加入` }, user.room);
+        .emit(
+          "msgReceived",
+          "System",
+          { msg: `${manager.name} 加入` },
+          user.room
+        );
       io.sockets.in("csroom").emit("getuserservice", user.room, true);
       io.sockets.in("csroom").emit("whichcsinroom", manager.name, user.room);
       if (user.status === 0) {
@@ -273,6 +286,10 @@ io.on("connection", (socket) => {
       }
       getRecord(user.room);
     }
+    setTimeout(() => {
+      console.log("--------getInRoom-------");
+      getall();
+    }, 200);
   });
 
   // 將user踢出
@@ -282,6 +299,10 @@ io.on("connection", (socket) => {
       user = user[0];
       io.to(user.id).emit("kicked");
     }
+    setTimeout(() => {
+      console.log("--------kickeduser-------");
+      getall();
+    }, 200);
   });
 
   // cs join room
@@ -332,19 +353,26 @@ io.on("connection", (socket) => {
       }
     }
     getOnline(roomid);
+    setTimeout(() => {
+      console.log("---------leaveroom--------");
+      getall();
+    }, 200);
   });
 
   // cs改變狀態 // 修改參數 status, current, name
   socket.on("getbusyvalue", (status) => {
     var count = countOnlineManager();
-    var manager = getCurrentClient(socket.id);
+    var manager = getCurrentManager(socket.id);
     var bu = "";
-    if (manager.status === "disc" && status !== "disc") {
+    if (manager !== false && manager.status === "disc" && status !== "disc") {
       manager = managerEditStatus(manager.id, status);
       if (status === "manu") {
         bu = 1;
       } else if (status === "auto") {
         bu = 0;
+        if (manager.rooms.length === 0) {
+          getNoservice(socket, status);
+        }
       }
     } else if (manager.status === "manu" && status !== "manu") {
       if (manager.rooms.length !== 0 && status === "disc") {
@@ -355,7 +383,7 @@ io.on("connection", (socket) => {
         } else if (status === "auto") {
           bu = 0;
           if (manager.rooms.length === 0) {
-            getNoservice(socket, status, manager.name);
+            getNoservice(socket, status);
           }
         }
         manager = managerEditStatus(manager.id, status);
@@ -376,6 +404,10 @@ io.on("connection", (socket) => {
       .in("csroom")
       .emit("cschangestatus", manager.id, bu, manager.name);
     io.sockets.in("csroom").emit("csonline", count);
+    setTimeout(() => {
+      console.log("---------getbusyvalue--------");
+      getall();
+    }, 200);
   });
 
   // 拉cs進room // 修改參數 csSocketId, roomId, csName
@@ -386,7 +418,7 @@ io.on("connection", (socket) => {
     if (
       manager !== undefined &&
       manager.rooms.indexOf(roomid) !== -1 &&
-      user !== undefined
+      user.length !== 0
     ) {
       getRecord(roomid);
       manager = managerAddRoom(manager.id, roomid);
@@ -414,6 +446,10 @@ io.on("connection", (socket) => {
         }
       });
     }
+    setTimeout(() => {
+      console.log("----------cspull--------");
+      getall();
+    }, 200);
   });
 
   // 後台訊息用
@@ -463,7 +499,7 @@ io.on("connection", (socket) => {
             io.to(value.id).emit("notic_getinroom", nouser.room);
           }
         }
-        redis.hgetall(`chat_socket: ${id}`, (error, results) => {
+        redis.hgetall(`chat_socket: ${manager.id}`, (error, results) => {
           if (!error) {
             redis.srem(`cs_${results.id}`, user.room);
           }
@@ -503,6 +539,10 @@ io.on("connection", (socket) => {
     let count = getAllClient();
     io.sockets.in("csroom").emit("user_online", count.length);
     io.sockets.in("csroom").emit("csonline", countOnlineManager());
+    setTimeout(() => {
+      console.log("---------disconnect--------");
+      getall();
+    }, 200);
   });
 
   // 客戶端拿取罐頭訊息
@@ -565,6 +605,10 @@ function orderroom(socket, roomid, name, detial, linktime, lang) {
     io.sockets.in("csroom").emit("user_online", usercount.length);
     io.sockets.in("Chat").emit("getuser", name);
   });
+  setTimeout(() => {
+    console.log("----------orderroom---------");
+    getall();
+  }, 200);
 }
 
 // 顯示room的人數
@@ -600,7 +644,7 @@ function getRecord(roomid) {
 // 選取cs進入room
 function setcs(roomid) {
   let manager = getNoBusyManager();
-  if (manager !== false) {
+  if (manager !== false && manager.status === "auto") {
     manager = managerAddRoom(manager.id, roomid);
     getRecord(roomid);
     io.to(manager.id).emit("join", roomid);
@@ -613,20 +657,18 @@ function setcs(roomid) {
     // noticbackend(csid, roomid);
     io.sockets.in("csroom").emit("getuserservice", roomid, true);
   } else {
+    let user = getClientRoom(roomid);
+    clientEditStatus(user[0].id, 0);
     io.sockets
       .in(roomid)
       .emit("msgReceived", "System", { msg: "客服忙线中，请稍等" }, roomid);
     io.sockets.in("csroom").emit("getuserservice", roomid, false);
   }
+  setTimeout(() => {
+    console.log("-------setcs-------");
+    getall();
+  }, 200);
 }
-
-// function noticbackend(csid, roomid) {
-//   if (managerChat.has(csid) && roomName.has(roomid)) {
-//     let username = roomName.get(roomid).values().next().value;
-//     let chatid = managerChat.get(csid).values().next().value;
-//     io.to(chatid).emit("notic_getinroom", username);
-//   }
-// }
 
 // 取得罐頭訊息
 function canmsgfun(roomid, socketid, lang) {
@@ -645,4 +687,37 @@ function canmsgfun(roomid, socketid, lang) {
       }
     });
   });
+}
+
+// 拿取沒被服務的user
+function getNoservice(socket, status) {
+  let nouser = getNoServiceClient();
+  if (nouser === false) {
+    return;
+  } else if (nouser !== false && status === "auto") {
+    let manager = managerAddRoom(socket.id, nouser.room);
+    getRecord(nouser.room);
+    io.sockets
+      .in(nouser.room)
+      .emit(
+        "msgReceived",
+        "System",
+        { msg: `${manager.name} 加入` },
+        nouser.room
+      );
+    io.sockets.in("csroom").emit("getuserservice", nouser.room, true);
+    io.sockets.in("csroom").emit("whichcsinroom", manager.name, nouser.room);
+    io.to(manager.id).emit("join", nouser.room);
+    getOnline(nouser.room);
+    io.to(manager.id).emit("notic_getinroom", nouser.room);
+  }
+  setTimeout(() => {
+    console.log("--------getnoservice-------");
+    getall();
+  }, 200);
+}
+
+function getall() {
+  console.log(getAllClient());
+  console.log(getAllManager());
 }
