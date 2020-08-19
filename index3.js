@@ -45,6 +45,7 @@ const {
 } = require("./utils/managers");
 // const managers = require("./utils/managers");
 const request = require("request");
+const { del } = require("request");
 // 設定port
 const port = 4477;
 // 攔截和解析所有的請求(處理utf-8編碼的資料)
@@ -188,7 +189,7 @@ io.on("connection", (socket) => {
       dbquery(sql).then((data) => {
         nickname = data[0].name;
         accountcode = data[0].accountcode;
-        redis.hmset(`chat_socket: ${socket.id}`, {
+        redis.hmset(`chat_socket:${socket.id}`, {
           name: nickname,
           id: mid,
           busyornot: status,
@@ -319,7 +320,7 @@ io.on("connection", (socket) => {
       user = user[0];
       let manager = managerDeleteRoom(socket.id, roomid);
       socket.leave(roomid);
-      redis.hgetall(`chat_socket: ${socket.id}`, (error, result) => {
+      redis.hgetall(`chat_socket:${socket.id}`, (error, result) => {
         if (Object.keys(result).length != 0) {
           redis.srem(`cs_${result.id}`, roomId);
         }
@@ -440,7 +441,7 @@ io.on("connection", (socket) => {
       io.sockets.in("csroom").emit("getuserservice", roomid, true);
       io.sockets.in("csroom").emit("whichcsinroom", manager.name, roomid);
       getOnline(roomid);
-      redis.hgetall(`chat_socket: ${csSocketId}`, function (error, results) {
+      redis.hgetall(`chat_socket:${csSocketId}`, function (error, results) {
         if (!error && Object.keys(results).length != 0) {
           redis.sadd(`cs_${results.id}`, roomId);
         }
@@ -499,7 +500,7 @@ io.on("connection", (socket) => {
             io.to(value.id).emit("notic_getinroom", nouser.room);
           }
         }
-        redis.hgetall(`chat_socket: ${manager.id}`, (error, results) => {
+        redis.hgetall(`chat_socket:${manager.id}`, (error, results) => {
           if (!error) {
             redis.srem(`cs_${results.id}`, user.room);
           }
@@ -529,12 +530,8 @@ io.on("connection", (socket) => {
         }
       });
       io.sockets.in("csroom").emit("csleave", manager.id);
-      redis.hgetall(`chat_socket: ${manager.id}`, (error, results) => {
-        if (results) {
-          redis.del(`double:${results.id}`);
-        }
-      });
-      redis.del(`chat_socket: ${manager.id}`);
+      redis.del(`double:${manager.accid}`);
+      redis.del(`chat_socket:${manager.id}`);
     }
     let count = getAllClient();
     io.sockets.in("csroom").emit("user_online", count.length);
