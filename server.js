@@ -45,12 +45,15 @@ const {
 } = require("./utils/managers");
 // const managers = require("./utils/managers");
 const request = require("request");
-const { del } = require("request");
 // 設定port
 const port = 4477;
 // 攔截和解析所有的請求(處理utf-8編碼的資料)
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+// app.use(bodyParser({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ extended: false, limit: "50mb" }));
+// app.use(bodyParser.json()); // 設定大小
+app.use(bodyParser.json({ limit: "50mb" }));
+app.use(bodyParser.text({ limit: "50mb" }));
+// app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
 
 // router
 app.all("/", (req, res) => {
@@ -77,12 +80,18 @@ server.listen(port, "0.0.0.0", function () {
 
 // socekt 連線
 io.on("connection", (socket) => {
+  socket.on("error", (err) => {
+    console.log(err);
+  });
   console.log(`connection: ${socket.id}`);
 
   // 產生一組不重複的id, 給客戶端做room id用
   var uuid = uuidv1();
+  // 傳送roomid到客戶端
+  socket.emit("getUUID", uuid);
   // 接收訊息 // 修改參數 roomid, msgname, msg, pic, time
   socket.on("publish", (roomid, msg, pic, time) => {
+    console.log("publish");
     var user = getCurrentClient(socket.id);
     var manager = getCurrentManager(socket.id);
     var name = "";
@@ -97,12 +106,9 @@ io.on("connection", (socket) => {
       .in(roomid)
       .emit("msgReceived", name, { msg: msg }, roomid, pic, time);
   });
-
-  // 傳送roomid到客戶端
-  socket.emit("getUUID", uuid);
-
   // 訂閱房間
-  socket.on("orderroom", (roomid, name, detial, linktime, lang) => {
+  socket.on("orderroom", (roomid, name, detial, linktime, lang, test) => {
+    console.log(test, roomid);
     orderroom(socket, roomid, name, detial, linktime, lang);
   });
 
@@ -404,6 +410,7 @@ io.on("connection", (socket) => {
     io.sockets
       .in("csroom")
       .emit("cschangestatus", manager.id, bu, manager.name);
+    count = countOnlineManager();
     io.sockets.in("csroom").emit("csonline", count);
     setTimeout(() => {
       console.log("---------getbusyvalue--------");
