@@ -244,7 +244,7 @@ io.on("connection", (socket) => {
       io.sockets.in("csroom").emit("user_online", users.length);
       redis.hmset(`double:${mid}`, { mid: mid });
     } else {
-      socket.disconnect();
+      // socket.disconnect();
     }
     setTimeout(() => {
       console.log("--------getbusy-------");
@@ -453,19 +453,6 @@ io.on("connection", (socket) => {
     }, 200);
   });
 
-  // 後台訊息用
-  // socket.on("getchat", () => {});
-
-  // 後台訊息socket id對應cs socket id
-  // socket.on("correspond", function (corrId) {
-  //   if (!managerChat.has(socket.id)) {
-  //     managerChat.set(socket.id, new Set());
-  //   }
-  //   managerChat.get(socket.id).add(corrId);
-  //   console.log("**************getchat******************");
-  //   listall();
-  // });
-
   // 離線
   socket.on("disconnect", () => {
     console.log(`bye! ${socket.id}`);
@@ -557,8 +544,9 @@ function orderroom(socket, roomid, name, detial, linktime, lang) {
   socket.join(roomid);
   var user = clientJoin(socket.id, name, roomid, detial, linktime, lang, 0);
   request(`http://freeapi.ipip.net/${detial.ip}`, (error, response, body) => {
+    // https://api.ip.sb/geoip
     if (error == null) {
-      let sql = `select id from chat_account_detial where name = ${name}`;
+      let sql = `select id from chat_account_detial where name = '${name}'`;
       dbquery(sql).then((result) => {
         if (result == false) {
           let sql1 =
@@ -576,13 +564,22 @@ function orderroom(socket, roomid, name, detial, linktime, lang) {
           ];
           dbinsert(sql1, addsqlparams);
         } else {
-          let sql2 = "update chat_account_detial set area = ? where name = ?";
-          let addsqlparams2 = [body, name];
+          console.log(detial.browser);
+          let sql2 =
+            "update chat_account_detial set area = ?, lasttime = ?, height = ?, width = ?, device = ?, browser = ? where name = ?";
+          let addsqlparams2 = [
+            body,
+            linktime,
+            detial.height,
+            detial.width,
+            detial.device,
+            detial.browser,
+            name,
+          ];
           dbinsert(sql2, addsqlparams2);
         }
       });
       user = clientEditArea(user.id, body);
-      console.log(user);
     }
   });
   var sql3 = "insert into chat_question (id, name, question) value (0, ?, ?)";
@@ -628,6 +625,7 @@ function getRecord(roomid) {
       let sql = `Select * from content where room = '${roomid}' Limit ${count},50`;
       dbquery(sql).then(function (result) {
         if (result != false) {
+          console.log(result);
           io.sockets.in("csroom").emit("getRecord", result, roomid);
         } else {
           io.sockets.in("csroom").emit("getRecord", null, roomid);
@@ -671,7 +669,6 @@ function setcs(roomid) {
 function canmsgfun(roomid, socketid, lang) {
   return new Promise(function (resolve) {
     var sql = `Select msg from chat_sys_msg where lang = '${lang}'`;
-    console.log(sql);
     dbquery(sql).then(function (msg) {
       if (msg !== false) {
         io.to(socketid).emit(

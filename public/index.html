@@ -564,11 +564,6 @@
           <el-form-item label="" class="username">
             <img class="img2" src="./router/images/chat.png" />
           </el-form-item>
-          <!-- <h1><img src="./router/images/login.svg?1" alt="登入"><span>请输入会员账号/昵称</span></h1>
-        <el-form-item label="" class="username">
-          <el-input v-model="form1.accountcode" placeholder="Username"></el-input>
-        </el-form-item> -->
-          <!-- <h2 style="color:rgba(0, 0, 0, .30)">请选择您欲咨询的问题</h2> -->
           <h2 style="color: rgba(0, 0, 0, 0.3);">{{lang.selectquestion}}</h2>
           <el-form-item label="問題" style="text-align: center;">
             <el-radio-group v-model="form1.question">
@@ -580,7 +575,9 @@
             </el-radio-group>
           </el-form-item>
           <el-form-item class="loginButton">
-            <el-button type="primary" @click="noReg">{{lang.submit}}</el-button>
+            <el-button type="primary" @click="noReg" :loading="buttonloading"
+              >{{lang.submit}}</el-button
+            >
           </el-form-item>
         </el-form>
       </div>
@@ -693,6 +690,7 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script src="https://unpkg.com/element-ui@2.13.2/lib/index.js"></script>
+    <script src="https://cdn.bootcss.com/moment.js/2.9.0/moment.js"></script>
     <script
       src="http://api.map.baidu.com/api?v=1.4"
       type="text/javascript"
@@ -801,6 +799,7 @@
             },
             dialogImageUrl: "",
             dialogVisible: false,
+            buttonloading: true,
           };
         },
         created() {
@@ -812,11 +811,19 @@
           var _this = this;
           this.setemojis();
           this.socket = io("http://vip66741.com");
+          this.socket.on("disconnect", function () {
+            alert(_this.lang.disconnect);
+            _this.socket.disconnect();
+          });
           var ary = this.getcookie();
           if (ary.hasOwnProperty("lang")) {
             this.handleEdit(ary.lang);
           }
+          if (!ary.hasOwnProperty("token")) {
+            this.buttonloading = false;
+          }
           var siv = setInterval(function () {
+            console.log(_this.socket.connected);
             if (_this.socket.connected == false) {
               alert(_this.lang.disconnect);
               clearInterval(siv);
@@ -838,12 +845,11 @@
             sopic,
             time
           ) {
-            console.log(name, data, channel);
+            console.log(name, data, channel, time);
             _this.addMsg(name, data, channel, sopic, time);
           });
           // 訂閱room
           this.socket.on("getUUID", function (data) {
-            console.log(data);
             _this.uuid = data;
             let cookie = document.cookie;
             if (cookie.length != 0) {
@@ -859,6 +865,7 @@
           this.socket.on("setaccountcode", function (accode) {
             _this.accountcode = accode;
             _this.msg_name = accode;
+            _this.buttonloading = false;
           });
           // 取得roomid
           this.socket.on("setCookie", function (data) {
@@ -867,7 +874,7 @@
           });
           // kicked
           this.socket.on("kicked", function () {
-            _this.socket.disconnect();
+            // _this.socket.disconnect();
             _this.msglist.push({
               msg: _this.lang.disconnect,
               style: "center",
@@ -876,7 +883,7 @@
           });
           // 雙開
           this.socket.on("userdouble", function () {
-            _this.socket.disconnect();
+            // _this.socket.disconnect();
             _this.msglist.push({
               msg: _this.lang.userdouble,
               style: "center",
@@ -912,7 +919,7 @@
           },
           beforeunloadFn(e) {
             if (this.socket != "") {
-              this.socket.disconnect();
+              // this.socket.disconnect();
               var exp = new Date();
               exp.setTime(exp.getTime() - 1);
               document.cookie =
@@ -1212,9 +1219,10 @@
           //取得瀏覽器
           getbrowser() {
             var explorer = navigator.userAgent;
-            if (explorer.indexOf("MSIE") >= 0) {
+            console.log(explorer);
+            if (explorer.indexOf("Edge") >= 0) {
               //ie
-              return "ie";
+              return "Edge";
             } else if (explorer.indexOf("Firefox") >= 0) {
               //firefox
               return "Firefox";
@@ -1255,8 +1263,10 @@
               (this.form.msg != "" && this.form.msg != "\n") ||
               this.upfile != ""
             ) {
-              var currenttime = this.getDate("");
-              var nowtime = currenttime.split(" ");
+              var currenttime = moment().format("YYYY/MM/DD HH:mm:ss");
+              console.log(currenttime);
+              var nowtime = moment().format("HH:mm");
+              console.log(nowtime);
               var _this = this;
               if (this.upfile != "") {
                 this.socket.emit(
@@ -1264,7 +1274,7 @@
                   this.uuid,
                   this.upfile,
                   "",
-                  nowtime[1]
+                  nowtime
                 );
                 // roomid, content, date
                 this.socket.emit(
@@ -1280,7 +1290,7 @@
                   this.uuid,
                   this.form.msg,
                   "",
-                  nowtime[1]
+                  nowtime
                 ); //傳送資料給server
                 this.form.msg = this.getformmsgemoji();
                 this.socket.emit(
@@ -1336,49 +1346,6 @@
               }
             }, 500);
           },
-          // 取的日期時間 (YYYY/MM/DD HH:mm:ss)
-          getDate(indate) {
-            var date = "";
-            if (indate == "") {
-              date = new Date();
-            } else {
-              date = new Date(indate);
-            }
-            var month, day, hour, min;
-            if (date.getMonth() / 10 < 1) {
-              month = date.getMonth() + 1;
-              month = "0" + month;
-            } else {
-              month = date.getMonth();
-            }
-            if (date.getDate() / 10 < 1) {
-              day = "0" + date.getDate();
-            } else {
-              day = date.getDate();
-            }
-            if (date.getHours() / 10 < 1) {
-              hour = "0" + date.getHours();
-            } else {
-              hour = date.getHours();
-            }
-            if (date.getMinutes() / 10 < 1) {
-              min = "0" + date.getMinutes();
-            } else {
-              min = date.getMinutes();
-            }
-            var date =
-              date.getYear() +
-              1900 +
-              "/" +
-              month +
-              "/" +
-              day +
-              " " +
-              hour +
-              ":" +
-              min;
-            return date;
-          },
           // 處理字串中的emoji
           getformmsgemoji() {
             var index = this.form.msg.search(
@@ -1420,7 +1387,7 @@
           },
           // 取得上传的圖片
           getFile(file) {
-            let maxsize = 1024 * 400; // 300KB
+            let maxsize = 1024 * 200; // 300KB
             if (file.size > maxsize) {
               this.$message({
                 message: this.lang.imagesize,
@@ -1441,14 +1408,53 @@
               let imgResult = "";
               reader.readAsDataURL(file);
               reader.onload = function () {
+                console.log(this.result);
                 imgResult = reader.result; // data:image/jpeg;base64,
+                console.log(imgResult.length / 1024);
+                let newImage = new Image();
+                let quality = 1; //壓縮係數0-1之間，壓縮到0.9以上會有bug，注意！（可以自行設置）
+                newImage.src = imgResult;
+                newImage.setAttribute("crossOrigin", "Anonymous"); //url爲外域時需要
+                let imgWidth, imgHeight;
+                newImage.onload = function () {
+                  imgWidth = this.width;
+                  imgHeight = this.height;
+                  //給生成圖片設置一個默認的最大寬/高（可以自行設置）
+                  let myWidth = 600;
+                  //準備在畫布上繪製圖片
+                  let canvas = document.createElement("canvas");
+                  let ctx = canvas.getContext("2d");
+                  //判斷上傳的圖片的寬高是否超過設置的默認最大值，以及設置同比例的寬高
+                  if (Math.max(imgWidth, imgHeight) > myWidth) {
+                    if (imgWidth > imgHeight) {
+                      canvas.width = myWidth;
+                      canvas.height = (myWidth * imgHeight) / imgWidth;
+                    } else {
+                      canvas.height = myWidth;
+                      canvas.width = (myWidth * imgWidth) / imgHeight;
+                    }
+                  } else {
+                    canvas.width = imgWidth;
+                    canvas.height = imgHeight;
+                  }
+                  //清空畫布
+                  ctx.clearRect(0, 0, canvas.width, canvas.height);
+                  //開始繪製圖片到畫布上
+                  ctx.drawImage(this, 0, 0, canvas.width, canvas.height);
+                  imgResult = canvas.toDataURL("image/png", quality); //壓縮圖片大小（關鍵代碼）
+                  // 獲取到當前的圖片的大小，然後調整成自己需要的大小，例如說需要200KB-500KB之間（可以自行設置
+                  console.log(imgResult.length / 1024);
+                  // console.log(imgResult);
+                  resolve(imgResult);
+                  // this.myCallback(newBase64); //回調函數，做你想要的操作（可以自行設置）
+                };
               };
               reader.onerror = function (error) {
                 reject(error);
               };
-              reader.onloadend = function () {
-                resolve(imgResult);
-              };
+              // reader.onloadend = function () {
+              //   resolve(imgResult);
+              // };
             });
           },
           // 自動下滾到訊息最底
