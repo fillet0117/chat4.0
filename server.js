@@ -16,6 +16,7 @@ const jwtDecode = require("jwt-decode");
 const moment = require("moment");
 const Redis = require("ioredis");
 const redis = new Redis(6379, "localhost", { password: "ty0321" });
+const url = "http://vip66741.com";
 
 // 模組
 const { dbquery, dbinsert } = require("./utils/DBquery");
@@ -43,17 +44,12 @@ const {
   countOnlineManager,
   getNoBusyManager,
 } = require("./utils/managers");
-// const managers = require("./utils/managers");
 const request = require("request");
 // 設定port
 const port = 4477;
 // 攔截和解析所有的請求(處理utf-8編碼的資料)
-// app.use(bodyParser({ limit: '50mb' }));
-app.use(bodyParser.urlencoded({ extended: false, limit: "50mb" }));
-// app.use(bodyParser.json()); // 設定大小
-app.use(bodyParser.json({ limit: "50mb" }));
-app.use(bodyParser.text({ limit: "50mb" }));
-// app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json()); // 設定大小
 
 // router
 app.all("/", (req, res) => {
@@ -90,8 +86,7 @@ io.on("connection", (socket) => {
   // 傳送roomid到客戶端
   socket.emit("getUUID", uuid);
   // 接收訊息 // 修改參數 roomid, msgname, msg, pic, time
-  socket.on("publish", (roomid, msg, pic, time) => {
-    console.log("publish");
+  socket.on("publish", (roomid, msg, pic, time, imgtime) => {
     var user = getCurrentClient(socket.id);
     var manager = getCurrentManager(socket.id);
     var name = "";
@@ -102,13 +97,37 @@ io.on("connection", (socket) => {
       io.sockets.in("csroom").emit("setwaittime", roomid);
       name = manager.name;
     }
-    io.sockets
-      .in(roomid)
-      .emit("msgReceived", name, { msg: msg }, roomid, pic, time);
+    if (checkImg(msg) == true) {
+      var base64Data = msg.replace(/^data:image\/jpeg;base64,/, "");
+      fs.writeFile(
+        path.join(__dirname, `/public/msgimage/${imgtime}.jpg`),
+        base64Data,
+        "base64",
+        function (err) {
+          if (err === null) {
+            io.sockets
+              .in(roomid)
+              .emit(
+                "msgReceived",
+                name,
+                { msg: `${url}/router/msgimage/${imgtime}.jpg` },
+                roomid,
+                pic,
+                time
+              );
+          } else {
+            console.log(err);
+          }
+        }
+      );
+    } else {
+      io.sockets
+        .in(roomid)
+        .emit("msgReceived", name, { msg: msg }, roomid, pic, time);
+    }
   });
   // 訂閱房間
-  socket.on("orderroom", (roomid, name, detial, linktime, lang, test) => {
-    console.log(test, roomid);
+  socket.on("orderroom", (roomid, name, detial, linktime, lang) => {
     orderroom(socket, roomid, name, detial, linktime, lang);
   });
 
@@ -555,7 +574,7 @@ function orderroom(socket, roomid, name, detial, linktime, lang) {
     if (error == null) {
       let sql = `select id from chat_account_detial where name = '${name}'`;
       dbquery(sql).then((result) => {
-        if (result == false) {
+        if (result === false) {
           let sql1 =
             "insert into chat_account_detial (id, name, ip, area, os, browser, height, width, device, lasttime) value (0, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
           var addsqlparams = [
@@ -571,18 +590,9 @@ function orderroom(socket, roomid, name, detial, linktime, lang) {
           ];
           dbinsert(sql1, addsqlparams);
         } else {
-          console.log(detial.browser);
           let sql2 =
-            "update chat_account_detial set area = ?, lasttime = ?, height = ?, width = ?, device = ?, browser = ? where name = ?";
-          let addsqlparams2 = [
-            body,
-            linktime,
-            detial.height,
-            detial.width,
-            detial.device,
-            detial.browser,
-            name,
-          ];
+            "update chat_account_detial set lasttime = ? where name = ?";
+          let addsqlparams2 = [linktime, name];
           dbinsert(sql2, addsqlparams2);
         }
       });
@@ -632,7 +642,6 @@ function getRecord(roomid) {
       let sql = `Select * from content where room = '${roomid}' Limit ${count},50`;
       dbquery(sql).then(function (result) {
         if (result != false) {
-          console.log(result);
           io.sockets.in("csroom").emit("getRecord", result, roomid);
         } else {
           io.sockets.in("csroom").emit("getRecord", null, roomid);
@@ -718,7 +727,27 @@ function getNoservice(socket, status) {
   }, 200);
 }
 
+function checkImg(data) {
+  let array = data.split(",", 2);
+  var string = "";
+  if (array[0].indexOf("data:image/") == -1) {
+    return false;
+  } else if (array[1] === undefined || array[1] === "") {
+    return false;
+  } else {
+    return true;
+  }
+}
+
 function getall() {
-  console.log(getAllClient());
+  let clients = getAllClient();
+  console.log(clients);
   console.log(getAllManager());
+  var csroom = io.sockets.adapter.rooms["csroom"];
+  console.log(csroom);
+  console.log("-------------------room:roomId------------------");
+  clients.forEach((value, key) => {
+    let testroom = io.sockets.adapter.rooms[value.room];
+    console.log(testroom);
+  });
 }

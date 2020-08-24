@@ -800,6 +800,7 @@
             dialogImageUrl: "",
             dialogVisible: false,
             buttonloading: true,
+            url: "http://vip66741.com",
           };
         },
         created() {
@@ -810,7 +811,7 @@
         mounted() {
           var _this = this;
           this.setemojis();
-          this.socket = io("http://vip66741.com");
+          this.socket = io(this.url);
           this.socket.on("error", (err) => {
             console.log(err);
           });
@@ -822,9 +823,6 @@
           if (ary.hasOwnProperty("lang")) {
             this.handleEdit(ary.lang);
           }
-          // if (!ary.hasOwnProperty("token")) {
-          //   this.buttonloading = false;
-          // }
           var siv = setInterval(function () {
             if (_this.socket.connected == false) {
               alert(_this.lang.disconnect);
@@ -955,21 +953,28 @@
             return final;
           },
           // 判斷圖片
+          // checkImg(data) {
+          //   let array = data.split(",", 2);
+          //   var string = "";
+          //   if (array[0].indexOf("data:image/") == -1) {
+          //     return false;
+          //   }
+          //   try {
+          //     string = btoa(atob(array[1]));
+          //   } catch (e) {
+          //     return false;
+          //   }
+          //   if (string == array[1]) {
+          //     return true;
+          //   }
+          //   return false;
+          // },
           checkImg(data) {
-            let array = data.split(",", 2);
-            var string = "";
-            if (array[0].indexOf("data:image/") == -1) {
-              return false;
-            }
-            try {
-              string = btoa(atob(array[1]));
-            } catch (e) {
-              return false;
-            }
-            if (string == array[1]) {
+            if (data.indexOf("/router/msgimage/") !== -1) {
               return true;
+            } else {
+              return false;
             }
-            return false;
           },
           // 新增訊息
           addMsg(name, data, channel, sopic, time) {
@@ -1001,8 +1006,8 @@
             }
             if (name != "Canmsg") {
               if (
-                data.msg.indexOf("0x1") != -1 &&
-                this.checkImg(data.msg) == false
+                data.msg.indexOf("0x1") !== -1 &&
+                this.checkImg(data.msg) === false
               ) {
                 data.msg = this.getemoji(data.msg);
               }
@@ -1018,7 +1023,8 @@
                 da["photo"] = sopic;
               }
               da["image"] = this.checkImg(data.msg); // 是否是圖片
-              if (this.checkImg(data.msg)) {
+              if (this.checkImg(data.msg) === true) {
+                data.msg = this.url + data.msg;
                 this.srcList.push(data.msg);
               }
               this.msglist.push(da);
@@ -1093,8 +1099,7 @@
                     _this.msg_name,
                     detial,
                     currenttime,
-                    _this.turnlang,
-                    1
+                    _this.turnlang
                   );
                 });
               } else if (
@@ -1114,13 +1119,7 @@
                     _this.msg_name,
                     detial,
                     currenttime,
-                    _this.turnlang,
-                    [
-                      arycookie,
-                      arycookie.socketRoom_noacc,
-                      arycookie.msg_name,
-                      arycookie.token,
-                    ]
+                    _this.turnlang
                   );
                 });
               } else {
@@ -1135,8 +1134,7 @@
                     _this.msg_name,
                     detial,
                     currenttime,
-                    _this.turnlang,
-                    [_this.uuid]
+                    _this.turnlang
                   );
                 });
               }
@@ -1152,8 +1150,7 @@
                   _this.msg_name,
                   detial,
                   currenttime,
-                  _this.turnlang,
-                  4
+                  _this.turnlang
                 );
               });
             }
@@ -1281,6 +1278,7 @@
             ) {
               var currenttime = moment().format("YYYY/MM/DD HH:mm:ss");
               var nowtime = moment().format("HH:mm");
+              var imgtime = Math.floor(Date.now() / 1000);
               var _this = this;
               if (this.upfile !== "") {
                 console.log("emit file");
@@ -1290,15 +1288,17 @@
                   this.uuid,
                   this.upfile,
                   "",
-                  nowtime
+                  nowtime,
+                  imgtime
                 );
                 // roomid, content, date
-                // this.socket.emit(
-                //   "insertcontent",
-                //   this.uuid,
-                //   this.upfile,
-                //   currenttime
-                // );
+                this.socket.emit(
+                  "insertcontent",
+                  this.uuid,
+                  // this.upfile,
+                  `${this.url}/router/msgimage/${imgtime}.jpg`,
+                  currenttime
+                );
                 console.log("end emit file");
               }
               if (this.form.msg != "" && this.form.msg != "\n") {
@@ -1404,7 +1404,7 @@
           },
           // 取得上传的圖片
           getFile(file) {
-            let maxsize = 1024 * 700; // 400KB
+            let maxsize = 1024 * 500; // 400KB
             if (file.size > maxsize) {
               this.$message({
                 message: this.lang.imagesize,
@@ -1426,51 +1426,46 @@
               reader.readAsDataURL(file);
               reader.onload = function () {
                 imgResult = reader.result; // data:image/jpeg;base64,
-                // console.log(imgResult.length / 1024);
-                // let newImage = new Image();
-                // let quality = 1; //壓縮係數0-1之間，壓縮到0.9以上會有bug，注意！（可以自行設置）
-                // newImage.src = imgResult;
-                // newImage.setAttribute("crossOrigin", "Anonymous"); //url爲外域時需要
-                // let imgWidth, imgHeight;
-                // newImage.onload = function () {
-                //   imgWidth = this.width;
-                //   imgHeight = this.height;
-                //   //給生成圖片設置一個默認的最大寬/高（可以自行設置）
-                //   let myWidth = 600;
-                //   //準備在畫布上繪製圖片
-                //   let canvas = document.createElement("canvas");
-                //   let ctx = canvas.getContext("2d");
-                //   //判斷上傳的圖片的寬高是否超過設置的默認最大值，以及設置同比例的寬高
-                //   if (Math.max(imgWidth, imgHeight) > myWidth) {
-                //     if (imgWidth > imgHeight) {
-                //       canvas.width = myWidth;
-                //       canvas.height = (myWidth * imgHeight) / imgWidth;
-                //     } else {
-                //       canvas.height = myWidth;
-                //       canvas.width = (myWidth * imgWidth) / imgHeight;
-                //     }
-                //   } else {
-                //     canvas.width = imgWidth;
-                //     canvas.height = imgHeight;
-                //   }
-                //   //清空畫布
-                //   ctx.clearRect(0, 0, canvas.width, canvas.height);
-                //   //開始繪製圖片到畫布上
-                //   ctx.drawImage(this, 0, 0, canvas.width, canvas.height);
-                //   imgResult = canvas.toDataURL("image/png", quality); //壓縮圖片大小（關鍵代碼）
-                //   // 獲取到當前的圖片的大小，然後調整成自己需要的大小，例如說需要200KB-500KB之間（可以自行設置
-                //   console.log(imgResult.length / 1024);
-                //   // console.log(imgResult);
-                //   resolve(imgResult);
-                //   // this.myCallback(newBase64); //回調函數，做你想要的操作（可以自行設置）
-                // };
+                let newImage = new Image();
+                newImage.src = imgResult;
+                let imgWidth, imgHeight;
+                newImage.onload = function () {
+                  imgWidth = this.width;
+                  imgHeight = this.height;
+                  //給生成圖片設置一個默認的最大寬/高（可以自行設置）
+                  let myWidth = 500;
+                  //準備在畫布上繪製圖片
+                  let canvas = document.createElement("canvas");
+                  let ctx = canvas.getContext("2d");
+                  //判斷上傳的圖片的寬高是否超過設置的默認最大值，以及設置同比例的寬高
+                  if (Math.max(imgWidth, imgHeight) > myWidth) {
+                    if (imgWidth > imgHeight) {
+                      canvas.width = myWidth;
+                      canvas.height = (myWidth * imgHeight) / imgWidth;
+                    } else {
+                      canvas.height = myWidth;
+                      canvas.width = (myWidth * imgWidth) / imgHeight;
+                    }
+                  } else {
+                    canvas.width = imgWidth;
+                    canvas.height = imgHeight;
+                  }
+                  //清空畫布
+                  ctx.clearRect(0, 0, canvas.width, canvas.height);
+                  //開始繪製圖片到畫布上
+                  ctx.drawImage(this, 0, 0, canvas.width, canvas.height);
+                  imgResult = canvas.toDataURL("image/jpeg", 0.8);
+                  // 獲取到當前的圖片的大小，然後調整成自己需要的大小，例如說需要200KB-500KB之間（可以自行設置
+                  console.log(imgResult);
+                  resolve(imgResult);
+                };
               };
               reader.onerror = function (error) {
                 reject(error);
               };
-              reader.onloadend = function () {
-                resolve(imgResult);
-              };
+              // reader.onloadend = function () {
+              //   resolve(imgResult);
+              // };
             });
           },
           // 自動下滾到訊息最底
