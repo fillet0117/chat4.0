@@ -176,6 +176,7 @@ io.on("connection", (socket) => {
     var curruser = {};
     var uid = "";
     var mid = "";
+    var user = getClientRoom(roomid);
     if ((client = clientExist(socket.id)) !== false) {
       curruser = getCurrentClient(socket.id);
       uid = curruser.name.split("(");
@@ -185,8 +186,8 @@ io.on("connection", (socket) => {
       mid = curruser.accountcode;
     }
     var sql =
-      "insert into content (id, room, uid, mid, content, created_at) value (0, ?, ?, ?, ?, ?)";
-    var addsqlparams = [roomid, uid, mid, content, date];
+      "insert into content (id, room, uid, mid, content, created_at, roomname) value (0, ?, ?, ?, ?, ?, ?)";
+    var addsqlparams = [roomid, uid, mid, content, date, user[0].name];
     dbinsert(sql, addsqlparams);
   });
 
@@ -439,15 +440,15 @@ io.on("connection", (socket) => {
 
   // 拉cs進room // 修改參數 csSocketId, roomId, csName
   socket.on("cspull", (cssocketid, roomid) => {
-    var time = moment().format("YYYY/MM/DD HH:mm:ss");
+    // var time = moment().format("YYYY/MM/DD HH:mm:ss");
     var manager = getCurrentManager(cssocketid);
     var user = getClientRoom(roomid);
     if (
       manager !== undefined &&
-      manager.rooms.indexOf(roomid) !== -1 &&
+      manager.rooms.indexOf(roomid) === -1 &&
       user.length !== 0
     ) {
-      getRecord(roomid);
+      getRecord(roomid, cssocketid);
       manager = managerAddRoom(manager.id, roomid);
       io.to(manager.id).emit("join", roomid);
       if (manager.status === "auto") {
@@ -460,14 +461,13 @@ io.on("connection", (socket) => {
           .emit("cschangestatus", manager.id, 1, manager.name);
       }
       io.to(manager.id).emit("notic_getinroom", roomid);
-      // noticbackend(manager.id, roomId);
       io.sockets
         .in(roomid)
         .emit("msgReceived", "System", { msg: `${manager.name} 加入` }, roomid);
       io.sockets.in("csroom").emit("getuserservice", roomid, true);
       io.sockets.in("csroom").emit("whichcsinroom", manager.name, roomid);
       getOnline(roomid);
-      redis.hgetall(`chat_socket:${csSocketId}`, function (error, results) {
+      redis.hgetall(`chat_socket:${cssocketid}`, function (error, results) {
         if (!error && Object.keys(results).length != 0) {
           redis.sadd(`cs_${results.id}`, roomId);
         }
@@ -591,8 +591,8 @@ function orderroom(socket, roomid, name, detial, linktime, lang) {
           dbinsert(sql1, addsqlparams);
         } else {
           let sql2 =
-            "update chat_account_detial set lasttime = ? where name = ?";
-          let addsqlparams2 = [linktime, name];
+            "update chat_account_detial set lasttime = ?, area = ? where name = ?";
+          let addsqlparams2 = [linktime, body, name];
           dbinsert(sql2, addsqlparams2);
         }
       });
@@ -630,7 +630,7 @@ function getOnline(roomid) {
 }
 
 // 從資料庫拿聊天記錄
-function getRecord(roomid) {
+function getRecord(roomid, socketid = null) {
   return new Promise((resolve) => {
     let sql = `Select count(*) as count from content where room = '${roomid}'`;
     dbquery(sql).then(function (count) {
@@ -642,7 +642,12 @@ function getRecord(roomid) {
       let sql = `Select * from content where room = '${roomid}' Limit ${count},50`;
       dbquery(sql).then(function (result) {
         if (result != false) {
-          io.sockets.in("csroom").emit("getRecord", result, roomid);
+          if (socketid !== null) {
+            console.log(socketid);
+            io.to(socketid).emit("getRecord", result, roomid);
+          } else {
+            io.sockets.in("csroom").emit("getRecord", result, roomid);
+          }
         } else {
           io.sockets.in("csroom").emit("getRecord", null, roomid);
         }
@@ -706,6 +711,7 @@ function getNoservice(socket, status) {
     return;
   } else if (nouser !== false && status === "auto") {
     let manager = managerAddRoom(socket.id, nouser.room);
+    clientEditStatus(nouser.id, 1);
     getRecord(nouser.room);
     io.sockets
       .in(nouser.room)

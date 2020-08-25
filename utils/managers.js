@@ -101,6 +101,7 @@ function countOnlineManager() {
 // 取得閒置的manager
 function getNoBusyManager() {
   let index = managers.findIndex((manager) => manager.rooms.length === 0);
+  console.log(index);
   if (index !== -1) {
     return managers[index];
   } else {

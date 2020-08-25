@@ -61,7 +61,6 @@ function clientExist(id) {
 // 修改status
 function clientEditStatus(id, status) {
   const index = clients.findIndex((client) => client.id === id);
-  console.log(index);
   if (index !== -1) {
     clients[index].status = status;
     return clients[index];

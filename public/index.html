@@ -524,7 +524,6 @@
       }
     </style>
   </head>
-
   <body>
     <div id="app">
       <el-dropdown v-if="dis==false">
@@ -845,7 +844,6 @@
             sopic,
             time
           ) {
-            console.log(name, data, channel, time);
             _this.addMsg(name, data, channel, sopic, time);
           });
           // 訂閱room
@@ -953,22 +951,6 @@
             return final;
           },
           // 判斷圖片
-          // checkImg(data) {
-          //   let array = data.split(",", 2);
-          //   var string = "";
-          //   if (array[0].indexOf("data:image/") == -1) {
-          //     return false;
-          //   }
-          //   try {
-          //     string = btoa(atob(array[1]));
-          //   } catch (e) {
-          //     return false;
-          //   }
-          //   if (string == array[1]) {
-          //     return true;
-          //   }
-          //   return false;
-          // },
           checkImg(data) {
             if (data.indexOf("/router/msgimage/") !== -1) {
               return true;
@@ -1024,7 +1006,6 @@
               }
               da["image"] = this.checkImg(data.msg); // 是否是圖片
               if (this.checkImg(data.msg) === true) {
-                data.msg = this.url + data.msg;
                 this.srcList.push(data.msg);
               }
               this.msglist.push(da);
@@ -1222,17 +1203,16 @@
             } else if (userAgent.match(/Windows Phone/i)) {
               info = "Windows Phone";
             } else {
-              info = "電腦";
+              info = "computer";
             }
-            if (info != "電腦") {
-              info += " (手機) ";
+            if (info != "computer") {
+              info += " (Cell phone) ";
             }
             return info;
           },
           //取得瀏覽器
           getbrowser() {
             var explorer = navigator.userAgent;
-            console.log(explorer);
             if (explorer.indexOf("Edge") >= 0) {
               //ie
               return "Edge";
@@ -1281,8 +1261,6 @@
               var imgtime = Math.floor(Date.now() / 1000);
               var _this = this;
               if (this.upfile !== "") {
-                console.log("emit file");
-                console.log(this.upfile);
                 this.socket.emit(
                   "publish",
                   this.uuid,
@@ -1295,11 +1273,9 @@
                 this.socket.emit(
                   "insertcontent",
                   this.uuid,
-                  // this.upfile,
                   `${this.url}/router/msgimage/${imgtime}.jpg`,
                   currenttime
                 );
-                console.log("end emit file");
               }
               if (this.form.msg != "" && this.form.msg != "\n") {
                 this.socket.emit(
@@ -1456,7 +1432,6 @@
                   ctx.drawImage(this, 0, 0, canvas.width, canvas.height);
                   imgResult = canvas.toDataURL("image/jpeg", 0.8);
                   // 獲取到當前的圖片的大小，然後調整成自己需要的大小，例如說需要200KB-500KB之間（可以自行設置
-                  console.log(imgResult);
                   resolve(imgResult);
                 };
               };
