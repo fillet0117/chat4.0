@@ -13,7 +13,6 @@ const io = require("socket.io")(server);
 const bodyParser = require("body-parser");
 const uuidv1 = require("uuidv1");
 const jwtDecode = require("jwt-decode");
-const moment = require("moment");
 const Redis = require("ioredis");
 const redis = new Redis(6379, "localhost", { password: "ty0321" });
 const url = "http://vip66741.com";
@@ -440,7 +439,6 @@ io.on("connection", (socket) => {
 
   // 拉cs進room // 修改參數 csSocketId, roomId, csName
   socket.on("cspull", (cssocketid, roomid) => {
-    // var time = moment().format("YYYY/MM/DD HH:mm:ss");
     var manager = getCurrentManager(cssocketid);
     var user = getClientRoom(roomid);
     if (
@@ -711,21 +709,23 @@ function getNoservice(socket, status) {
     return;
   } else if (nouser !== false && status === "auto") {
     let manager = managerAddRoom(socket.id, nouser.room);
-    clientEditStatus(nouser.id, 1);
-    getRecord(nouser.room);
-    io.sockets
-      .in(nouser.room)
-      .emit(
-        "msgReceived",
-        "System",
-        { msg: `${manager.name} 加入` },
-        nouser.room
-      );
-    io.sockets.in("csroom").emit("getuserservice", nouser.room, true);
-    io.sockets.in("csroom").emit("whichcsinroom", manager.name, nouser.room);
-    io.to(manager.id).emit("join", nouser.room);
-    getOnline(nouser.room);
-    io.to(manager.id).emit("notic_getinroom", nouser.room);
+    if (manager !== false) {
+      clientEditStatus(nouser.id, 1);
+      getRecord(nouser.room);
+      io.sockets
+        .in(nouser.room)
+        .emit(
+          "msgReceived",
+          "System",
+          { msg: `${manager.name} 加入` },
+          nouser.room
+        );
+      io.sockets.in("csroom").emit("getuserservice", nouser.room, true);
+      io.sockets.in("csroom").emit("whichcsinroom", manager.name, nouser.room);
+      io.to(manager.id).emit("join", nouser.room);
+      getOnline(nouser.room);
+      io.to(manager.id).emit("notic_getinroom", nouser.room);
+    }
   }
   setTimeout(() => {
     console.log("--------getnoservice-------");

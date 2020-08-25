@@ -66,6 +66,8 @@ function managerAddRoom(id, room) {
   if (index !== -1 && managers[index].rooms.indexOf(room) === -1) {
     managers[index].rooms.push(room);
     return managers[index];
+  } else {
+    return false;
   }
 }
 
